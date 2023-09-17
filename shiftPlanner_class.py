@@ -225,11 +225,12 @@ class ShiftPlanner:
         self.error_shift = []
         self.error_areas = []
 
-    def run(self, max_iterations=1000):
+    def run(self, max_iterations=100):
         min_length = float("inf")
         best_shiftPlan = None
         best_error_areas = None
         best_error_shift = None
+        best_employees = None
 
         for iteration in range(max_iterations):
             self.shift_creator()
@@ -240,6 +241,7 @@ class ShiftPlanner:
                 best_shiftPlan = self.shift_plan
                 best_error_areas = self.error_areas
                 best_error_shift = self.error_shift
+                best_employees = self.employees
                 min_length = len(self.error_areas) + len(self.error_shift) / 3
 
             if not self.error_areas and not self.error_shift:  # Break if no errors
@@ -248,10 +250,13 @@ class ShiftPlanner:
             # Reset data
             self.reset()
 
-        if self.error_shift or self.error_areas:
-            self.shift_plan = best_shiftPlan
-            self.error_areas = best_error_areas
-            self.error_shift = best_error_shift
+        # Save the best data in the class
+        self.shift_plan = best_shiftPlan
+        self.error_areas = best_error_areas
+        self.error_shift = best_error_shift
+        self.employees = best_employees
+
+        if best_error_areas or best_error_shift:
             print("Max iterations reached or errors still present.")
             if self.error_areas:
                 for error in self.error_areas:

@@ -85,6 +85,7 @@ def create_calender(year, start_week=1, end_week=52):
     plan = ShiftPlanner(employees, start_week, end_week)
 
     shift_plan = plan.get_shift_plan()
+    employees = plan.employees
 
     max_len_areas = {
         BEREICHE[1]: find_max_employee_count(shift_plan, BEREICHE[1]),

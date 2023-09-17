@@ -11,9 +11,21 @@ class ShiftPlanner:
         self.error_shift = []
         self.error_areas = []
         self.run()
+        self.update_employees_with_best_plan()
 
     def get_shift_plan(self):
         return self.shift_plan
+
+    def update_employees_with_best_plan(self):
+        for week, shifts in self.shift_plan.items():
+            for shift, areas in shifts.items():
+                for area, emp_list in areas.items():
+                    for emp in emp_list:
+                        # Find the corresponding Employee object
+                        matching_emp = next((e for e in self.employees if e.name == emp.name), None)
+                        if matching_emp:
+                            # Update the shift for the corresponding Employee object
+                            matching_emp.add_shift(week, shift)
 
     def assign_shift(self, employee, shift):
         if shift == SCHICHT_RHYTHMUS[1]:
@@ -211,9 +223,9 @@ class ShiftPlanner:
                 if not find_employees_with_area_ability(shift_with_emp, areas, area):
                     for emp in shift_with_emp:
                         area_ran = random.choice(emp.bereiche)
-                        areas[area].append(emp)
+                        areas[area_ran].append(emp)
                         self.error_areas.append(
-                            f"Can't find an employee for the area: {area} in week: {week} emp:{emp.name} send to {area_ran}"
+                            f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{emp.name} send to {area_ran}"
                         )
                         shift_with_emp.remove(emp)
                     # break  # rest of emp cant be sort in
@@ -225,7 +237,7 @@ class ShiftPlanner:
         self.error_shift = []
         self.error_areas = []
 
-    def run(self, max_iterations=100):
+    def run(self, max_iterations=1000):
         min_length = float("inf")
         best_shiftPlan = None
         best_error_areas = None

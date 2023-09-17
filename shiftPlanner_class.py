@@ -238,11 +238,15 @@ class ShiftPlanner:
         self.error_areas = []
 
     def run(self, max_iterations=1000):
+        def decode(text):
+            return text.encode("utf-8").decode("utf-8")
+
         min_length = float("inf")
         best_shiftPlan = None
         best_error_areas = None
         best_error_shift = None
         best_employees = None
+        best_run = None
 
         for iteration in range(max_iterations):
             self.shift_creator()
@@ -254,6 +258,8 @@ class ShiftPlanner:
                 best_error_areas = self.error_areas
                 best_error_shift = self.error_shift
                 best_employees = self.employees
+                best_run = iteration
+
                 min_length = len(self.error_areas) + len(self.error_shift) / 3
 
             if not self.error_areas and not self.error_shift:  # Break if no errors
@@ -268,13 +274,14 @@ class ShiftPlanner:
         self.error_shift = best_error_shift
         self.employees = best_employees
 
-        if best_error_areas or best_error_shift:
+        if self.error_areas or self.error_shift:
             print("Max iterations reached or errors still present.")
+            print(f"Best run number: {best_run}")
             if self.error_areas:
                 for error in self.error_areas:
-                    print(error)
+                    print(decode(error))
             if self.error_shift:
                 for error in self.error_shift:
-                    print(error)
+                    print(decode(error))
         else:
             print("Shift planning completed successfully with 0 errors.")

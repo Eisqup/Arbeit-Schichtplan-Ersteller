@@ -209,7 +209,7 @@ def create_calender(year, start_week=1, end_week=52):
                     worksheet.write(row, col, emp.name, bordered_format)
 
     # --------------------------------------------------------------------------------
-    # Create Data view on the last page
+    # Create Data view
     # --------------------------------------------------------------------------------
     worksheet = workbook.add_worksheet("Information")
     start_col = 1
@@ -236,11 +236,38 @@ def create_calender(year, start_week=1, end_week=52):
         col = start_col
         data = employee.count_all()
         worksheet.write(row, col, employee.name, bordered_format)
+        worksheet.set_column(col, col, 10)
         col += 1
         for i in data.values():
             worksheet.write(row, col, i, bordered_format)
             col += 1
         row += 1
+
+    # --------------------------------------------------------------------------------
+    # Create Error view
+    # --------------------------------------------------------------------------------
+
+    if plan.error_areas or plan.error_shift:
+        worksheet = workbook.add_worksheet("Errors")
+        col = start_col
+        row = start_row
+        if plan.error_shift:
+            worksheet.write(row, col, "Error in Schichten", bordered_format)
+            row += 1
+            for error in plan.error_shift:
+                worksheet.write(row, col, error, bordered_format)
+                row += 1
+            col += 1
+            row = start_row
+
+        if plan.error_areas:
+            worksheet.write(row, col, "Error in Bereichen", bordered_format)
+            row += 1
+            for error in plan.error_areas:
+                worksheet.write(row, col, error, bordered_format)
+                row += 1
+
+        worksheet.set_column(start_col, col, 15)
 
     # Schließe die Excel-Datei
     workbook.close()

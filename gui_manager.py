@@ -13,6 +13,7 @@ class GUIManager:
         self.window.title("Employee Creator")
         self.start_row = 1
         self.button_size = 16
+        self.data = {}
         # Create an empty list to store selected "Rhythmus" options
         self.selected_rhythmus_list = []
 
@@ -20,11 +21,29 @@ class GUIManager:
         self.selected_bereich_list = []
         self.bereich_vars = []
 
+        self.load_data()
+
         # reader grid
         self.create_gui()
 
         # Populate the list of employee names
         self.load_employee_names_for_listbox()
+
+    def sort_data(self):
+        if "employees" in self.data:
+            self.data["employees"] = sorted(self.data["employees"], key=lambda x: x[EMPLOYEE_KEY[0]])
+
+    def load_data(self):
+        try:
+            with open(FILE_NAME, "r", encoding="utf-8") as file:
+                self.data = json.load(file)
+                self.sort_data()
+        except FileNotFoundError:
+            self.data = {"employees": []}
+
+            # Save the initial data to the file
+            with open(FILE_NAME, "w", encoding="utf-8") as file:
+                json.dump(self.data, file, indent=2)
 
     def create_gui(self):
         row = self.start_row
@@ -231,17 +250,9 @@ class GUIManager:
 
             messagebox.showerror("Error", f"The following fields are empty:\n\n {',   '.join(empty_fields)}")
         else:
-            # Load existing data from the file, if any
-            existing_data = {}
-            try:
-                with open(FILE_NAME, "r", encoding="utf-8") as file:
-                    existing_data = json.load(file)
-            except FileNotFoundError:
-                pass  # File doesn't exist, start with an empty dictionary
-
             # Check if the name already exists in the database
             employee_exists = False
-            for employee in existing_data.get("employees", []):
+            for employee in self.data.get("employees", []):
                 if employee.get(EMPLOYEE_KEY[0]) == name:
                     employee_exists = True
                     break
@@ -250,10 +261,10 @@ class GUIManager:
                 result = messagebox.askquestion("Confirm", "Mitarbeiter schon vorhanden. Daten überschreiben?")
                 if result == "yes":
                     # Overwrite the existing employee's data
-                    for index, employee in enumerate(existing_data.get("employees", [])):
+                    for index, employee in enumerate(self.data.get("employees", [])):
                         if employee.get(EMPLOYEE_KEY[0]) == name:
                             # Remove unchecked "Bereich" abilities from the list
-                            existing_data["employees"][index] = {
+                            self.data["employees"][index] = {
                                 EMPLOYEE_KEY[0]: name,
                                 EMPLOYEE_KEY[1]: SCHICHT_MODELS[selected_shift_model],
                                 EMPLOYEE_KEY[2]: self.selected_rhythmus_list,
@@ -271,11 +282,12 @@ class GUIManager:
                     EMPLOYEE_KEY[4]: urlaub_kw,
                     EMPLOYEE_KEY[5]: urlaub_day,
                 }
-                existing_data.setdefault("employees", []).append(employee_data)
+                self.data["employees"].append(employee_data)
+                self.sort_data()
 
             # Save the updated data back to the file
             with open(FILE_NAME, "w", encoding="utf-8") as file:
-                json.dump(existing_data, file, indent=2)
+                json.dump(self.data, file, indent=2)
 
             if not employee_exists:
                 message = "Mitarbeiter hinzugefügt:\n"
@@ -290,124 +302,88 @@ class GUIManager:
         self.employee_listbox.delete(0, tk.END)
         self.load_employee_names_for_listbox()
 
-        # Reset all form fields
+        # Clear the form fields after creating or updating an employee
         self.reset_form_fields()
+        self.load_data()
 
     def update_sneak_peek(self, event):
         # Get the selected index from the listbox
         selected_index = self.employee_listbox.curselection()
         if selected_index:
             selected_index = int(selected_index[0])
-            try:
-                with open(FILE_NAME, "r", encoding="utf-8") as file:
-                    existing_data = json.load(file)
-                    if "employees" in existing_data and selected_index < len(existing_data["employees"]):
-                        selected_employee = existing_data["employees"][selected_index]
 
-                        # Update the sneak peek with the selected employee's info
-                        info_text = "\n".join([f"{key}: {value}" for key, value in selected_employee.items()])
-                        self.sneak_peek_info_label.config(text=info_text)
-            except FileNotFoundError:
-                # Handle the case where the file doesn't exist or is empty
-                pass
+            if "employees" in self.data and selected_index < len(self.data["employees"]):
+                selected_employee = self.data["employees"][selected_index]
+                # Update the sneak peek with the selected employee's info
+                info_text = "\n".join([f"{key}: {value}" for key, value in selected_employee.items()])
+                self.sneak_peek_info_label.config(text=info_text)
 
     # Create a method to delete an employee
     def delete_employee(self):
         selected_index = self.employee_listbox.curselection()
         if selected_index:
             selected_index = int(selected_index[0])
-            try:
-                with open(FILE_NAME, "r", encoding="utf-8") as file:
-                    existing_data = json.load(file)
-                    if "employees" in existing_data and selected_index < len(existing_data["employees"]):
-                        employee_to_delete = existing_data["employees"][selected_index]
-                        # Ask for confirmation before deleting
-                        result = messagebox.askquestion(
-                            "Confirm Deletion",
-                            f"Do you want to delete the employee:\n{employee_to_delete[EMPLOYEE_KEY[0]]}?",
-                        )
-
-                        if result == "yes":
-                            # Delete the employee
-                            deleted_employee = existing_data["employees"].pop(selected_index)
-
-                            # Save the updated data back to the file
-                            with open(FILE_NAME, "w", encoding="utf-8") as file:
-                                json.dump(existing_data, file, indent=2)
-
-                            # Clear the form fields
-                            self.reset_form_fields()
-
-                            # Update the Listbox by removing the deleted employee's name
-                            self.employee_listbox.delete(selected_index)
-
-                            # Display a message confirming the deletion
-                            messagebox.showinfo("Deleted", f"Employee deleted:\n{deleted_employee[EMPLOYEE_KEY[0]]}")
-            except FileNotFoundError:
-                # Handle the case where the file doesn't exist or is empty
-                pass
+            if "employees" in self.data and selected_index < len(self.data["employees"]):
+                employee_to_delete = self.data["employees"][selected_index]
+                # Ask for confirmation before deleting
+                result = messagebox.askquestion(
+                    "Confirm Deletion",
+                    f"Do you want to delete the employee:\n{employee_to_delete[EMPLOYEE_KEY[0]]}?",
+                )
+                if result == "yes":
+                    # Delete the employee
+                    deleted_employee = self.data["employees"].pop(selected_index)
+                    # Save the updated data back to the file
+                    with open(FILE_NAME, "w", encoding="utf-8") as file:
+                        json.dump(self.data, file, indent=2)
+                    # Clear the form fields
+                    self.reset_form_fields()
+                    # Update the Listbox by removing the deleted employee's name
+                    self.employee_listbox.delete(selected_index)
+                    # Display a message confirming the deletion
+                    messagebox.showinfo("Deleted", f"Employee deleted:\n{deleted_employee[EMPLOYEE_KEY[0]]}")
 
     def load_selected_employee_to_GUI(self):
         # Get the selected index from the listbox
         selected_index = self.employee_listbox.curselection()
         if selected_index:
             selected_index = int(selected_index[0])
-            try:
-                with open(FILE_NAME, "r", encoding="utf-8") as file:
-                    existing_data = json.load(file)
-                    if "employees" in existing_data and selected_index < len(existing_data["employees"]):
-                        # Get the selected employee's data
-                        selected_employee = existing_data["employees"][selected_index]
-
-                        # Populate the input fields on the left side
-                        self.name_entry.delete(0, tk.END)
-                        self.name_entry.insert(0, selected_employee[EMPLOYEE_KEY[0]])
-
-                        # Convert the selected shift model to title case before checking its index
-                        shift_model = selected_employee[EMPLOYEE_KEY[1]]
-                        shift_model_index = list(SCHICHT_MODELS.values()).index(shift_model) + 1
-                        self.shift_model_var.set(shift_model_index)
-
-                        # Clear previous selections
-                        for var in self.bereich_vars:
-                            var.set(False)
-
-                        # Check the Bereich checkboxes based on the selected employee's data
-                        for bereich in selected_employee[EMPLOYEE_KEY[3]]:
-                            index = list(BEREICHE.values()).index(bereich)
-                            if 0 <= index < len(self.bereich_vars):
-                                self.bereich_vars[index].set(True)
-
-                        # Populate the Rhythmus buttons based on the selected employee's data
-                        self.reset_selected_rhythmus_label()
-                        for rhythmus in selected_employee[EMPLOYEE_KEY[2]]:
-                            if rhythmus in self.rhythmus_options:
-                                self.add_to_selected_rhythmus(rhythmus)
-
-                        # Populate the Urlaub fields
-                        self.urlaub_kw_entry.delete(0, tk.END)
-                        self.urlaub_kw_entry.insert(0, " ".join(map(str, selected_employee[EMPLOYEE_KEY[4]])))
-
-                        self.urlaub_day_entry.delete(0, tk.END)
-                        self.urlaub_day_entry.insert(0, " ".join(selected_employee[EMPLOYEE_KEY[5]]))
-
-            except FileNotFoundError:
-                # Handle the case where the file doesn't exist or is empty
-                pass
+            if "employees" in self.data and selected_index < len(self.data["employees"]):
+                # Get the selected employee's data
+                selected_employee = self.data["employees"][selected_index]
+                # Populate the input fields on the left side
+                self.name_entry.delete(0, tk.END)
+                self.name_entry.insert(0, selected_employee[EMPLOYEE_KEY[0]])
+                # Convert the selected shift model to title case before checking its index
+                shift_model = selected_employee[EMPLOYEE_KEY[1]]
+                shift_model_index = list(SCHICHT_MODELS.values()).index(shift_model) + 1
+                self.shift_model_var.set(shift_model_index)
+                # Clear previous selections
+                for var in self.bereich_vars:
+                    var.set(False)
+                # Check the Bereich checkboxes based on the selected employee's data
+                for bereich in selected_employee[EMPLOYEE_KEY[3]]:
+                    index = list(BEREICHE.values()).index(bereich)
+                    if 0 <= index < len(self.bereich_vars):
+                        self.bereich_vars[index].set(True)
+                # Populate the Rhythmus buttons based on the selected employee's data
+                self.reset_selected_rhythmus_label()
+                for rhythmus in selected_employee[EMPLOYEE_KEY[2]]:
+                    if rhythmus in self.rhythmus_options:
+                        self.add_to_selected_rhythmus(rhythmus)
+                # Populate the Urlaub fields
+                self.urlaub_kw_entry.delete(0, tk.END)
+                self.urlaub_kw_entry.insert(0, " ".join(map(str, selected_employee[EMPLOYEE_KEY[4]])))
+                self.urlaub_day_entry.delete(0, tk.END)
+                self.urlaub_day_entry.insert(0, " ".join(selected_employee[EMPLOYEE_KEY[5]]))
 
     # Add this method to populate the Listbox with employee names
     def load_employee_names_for_listbox(self):
-        try:
-            with open(FILE_NAME, "r", encoding="utf-8") as file:
-                existing_data = json.load(file)
-                employee_names = []
-                if "employees" in existing_data:
-                    employee_names = [employee[EMPLOYEE_KEY[0]] for employee in existing_data["employees"]]
-                for name in employee_names:
-                    self.employee_listbox.insert(tk.END, name)
-        except FileNotFoundError:
-            # Handle the case where the file doesn't exist or is empty
-            pass
+        employee_names = []
+        if "employees" in self.data:
+            employee_names = [employee[EMPLOYEE_KEY[0]] for employee in self.data["employees"]]
+        for name in employee_names:
+            self.employee_listbox.insert(tk.END, name)
 
     def add_to_selected_bereich(self, option):
         self.selected_bereich_list.append(option)

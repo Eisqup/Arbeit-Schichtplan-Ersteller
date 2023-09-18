@@ -6,4 +6,4 @@ BEREICHE = {1: "Drehen", 2: "Bohren", 3: "Fräsen"}
 
 FILE_NAME = "employees_test.json"
 
-EMPLOYEE_KEY = ["name", "schicht_model", "schicht_rhythmus", "bereiche", "urlaub_kw", "urlaub_tage"]
+EMPLOYEE_KEY = ["name", "schicht_model", "schicht_rhythmus", "bereiche", "urlaub_kw", "urlaub_tage", "linked"]

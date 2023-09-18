@@ -254,13 +254,14 @@ def create_calender(year, start_week=1, end_week=52):
             col += 1
             for area, emp_list in areas.items():
                 # change color to red if the area has not enough employees
-                color = bordered_format
+                color = workbook.add_format({"border": 1, "align": "center", "valign": "vcenter"})
                 if (
                     (area == BEREICHE[1] and len(emp_list) < 3)
                     or (area == BEREICHE[2] and len(emp_list) < 2)
                     or (area == BEREICHE[3] and len(emp_list) < 2)
                 ):
-                    color["font_color"] = "red"
+                    color.set_font_color("red")
+                    print(week, shift, area)
                 worksheet.write(row, col, len(emp_list), color)
                 col += 1
             col = 8

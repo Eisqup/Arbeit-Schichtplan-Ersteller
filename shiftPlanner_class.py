@@ -29,6 +29,9 @@ class ShiftPlanner:
         # Create the employees classes
         list_of_last_shift_in_model_2 = []
         for employee_data in employees_data:
+            # Check if EMPLOYEE_KEY[6] exists in employee_data
+            additional_data = employee_data.get(EMPLOYEE_KEY[6], None)
+
             employee = Employee(
                 employee_data[EMPLOYEE_KEY[0]],
                 employee_data[EMPLOYEE_KEY[1]],
@@ -36,7 +39,9 @@ class ShiftPlanner:
                 employee_data[EMPLOYEE_KEY[3]],
                 employee_data[EMPLOYEE_KEY[4]],
                 employee_data[EMPLOYEE_KEY[5]],
+                additional_data,
             )
+
             # set the start shift for the emp with the schichtmodel 2
             if employee.schicht_model == SCHICHT_MODELS[2]:
                 result = employee.set_start_shift(list_of_last_shift_in_model_2)
@@ -178,6 +183,14 @@ class ShiftPlanner:
                     self.assign_shift(selected_employee, shift)
                     available_employees.remove(selected_employee)
                     selected_employee.add_shift(week, shift)
+
+                    # check if emp has a buddy and he has the same amount of count +/-1 and add him to the shift
+                    result_emp_linked = selected_employee.has_link(available_employees, shift, lowest_count)
+                    if result_emp_linked:
+                        # add buddy if the parameter are ok
+                        self.assign_shift(result_emp_linked, shift)
+                        available_employees.remove(result_emp_linked)
+                        result_emp_linked.add_shift(week, shift)
                 else:
                     # Handle the case where no suitable employee is found for any shift
 
@@ -254,6 +267,7 @@ class ShiftPlanner:
                 selected_employee = random.choice(employees_with_area)
                 areas[area].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
+
             else:
 
                 def find_employees_with_area_ability(shift_with_emp, areas, area_needed):
@@ -275,14 +289,19 @@ class ShiftPlanner:
 
                     return False  # No suitable employee found
 
-                if not find_employees_with_area_ability(shift_with_emp, areas, area):
-                    for emp in shift_with_emp:
-                        area_ran = random.choice(emp.bereiche)
-                        areas[area_ran].append(emp)
-                        self.error_areas.append(
-                            f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{emp.name} send to {area_ran}"
-                        )
-                        shift_with_emp.remove(emp)
+                result = find_employees_with_area_ability(shift_with_emp, areas, area)
+
+                if result:
+                    continue
+
+                else:
+                    selected_employee = random.choice(shift_with_emp)
+                    area_ran = random.choice(selected_employee.bereiche)
+                    areas[area_ran].append(selected_employee)
+                    self.error_areas.append(
+                        f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
+                    )
+                    shift_with_emp.remove(selected_employee)
                     # break  # rest of emp cant be sort in
 
         return areas
@@ -292,7 +311,7 @@ class ShiftPlanner:
         self.error_shift = []
         self.error_areas = []
 
-    def run(self, max_iterations=1000):
+    def run(self, max_iterations=100):
         def decode(text):
             return text.encode("utf-8").decode("utf-8")
 

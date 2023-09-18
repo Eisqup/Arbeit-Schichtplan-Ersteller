@@ -2,15 +2,7 @@ from constants import *
 
 
 class Employee:
-    def __init__(
-        self,
-        name,
-        schicht_model,
-        schicht_rhythmus=[],
-        bereiche=[],
-        urlaub_kw=[],
-        urlaub_tage=[],
-    ):
+    def __init__(self, name, schicht_model, schicht_rhythmus=[], bereiche=[], urlaub_kw=[], urlaub_tage=[], link=None):
         self.name = name  # "name": "Employee1"
         self.schicht_model = schicht_model  # "schicht_model": "individuelle Schicht"
         self.schicht_rhythmus = schicht_rhythmus  # "schicht_rhythmus": "Früh, Spät, Nacht"
@@ -18,6 +10,8 @@ class Employee:
         self.bereiche = bereiche  # "bereiche": "Drehen, Bohren"
         self.urlaub_kw = [int(kw) for kw in urlaub_kw]  # "urlaub_kw": [2, 8, 14]
         self.urlaub_tage = urlaub_tage  # "urlaub_tage": ["10.01", "12.02"]
+
+        self.link = link
 
         self.start_shift_index_num = None
         self.counter_start_shift = 0
@@ -27,6 +21,15 @@ class Employee:
         # Add vacation to the dict
         for vacation_week in self.urlaub_kw:
             self.add_shift(int(vacation_week), "x")
+
+    def has_link(self, available_employees, shift, lowest_count):
+        if self.link:
+            for emp in available_employees:
+                if emp.name == self.link:
+                    emp_count = emp.get_count_of_shifts(shift)
+                    if abs(emp_count - lowest_count) <= 1:
+                        return emp
+        return False
 
     def set_start_shift(self, list_for_last_rhythmus_in_model_2):
         for rhythmus in self.schicht_rhythmus:

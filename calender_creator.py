@@ -3,7 +3,6 @@ import datetime
 from constants import *
 from shiftPlanner_class import ShiftPlanner
 import json
-from employee_class import Employee
 
 
 # get the max number of employees which are working in a area from the year.
@@ -18,40 +17,6 @@ def find_max_employee_count(data, area_in):
                     max_count = max(max_count, len(area_data))
 
     return max_count
-
-
-def load_employees():
-    try:
-        with open(FILE_NAME, "r", encoding="utf-8") as file:
-            data = json.load(file)
-            employees_data = data["employees"]
-    except FileNotFoundError:
-        return print("Keine Mitarbeiterliste verfügbar")
-
-    employees = []
-
-    # Create the employees classes
-    list_of_last_shift_in_model_2 = []
-    for employee_data in employees_data:
-        employee = Employee(
-            employee_data[EMPLOYEE_KEY[0]],
-            employee_data[EMPLOYEE_KEY[1]],
-            employee_data[EMPLOYEE_KEY[2]],
-            employee_data[EMPLOYEE_KEY[3]],
-            employee_data[EMPLOYEE_KEY[4]],
-            employee_data[EMPLOYEE_KEY[5]],
-        )
-        # set the start shift for the emp with the schichtmodel 2
-        if employee.schicht_model == SCHICHT_MODELS[2]:
-            result = employee.set_start_shift(list_of_last_shift_in_model_2)
-            if result in list_of_last_shift_in_model_2:
-                list_of_last_shift_in_model_2.remove(result)
-            list_of_last_shift_in_model_2.insert(0, result)
-
-        # Add emp to list
-        employees.append(employee)
-
-    return employees
 
 
 def add_days_of_the_week_to_worksheet(worksheet, bordered_format, col, row, start_date_of_the_week):
@@ -80,12 +45,10 @@ def create_calender(year, start_week=1, end_week=52):
     # Definiere einen Formatierer mit Rahmen
     bordered_format = workbook.add_format({"border": 1, "align": "center", "valign": "vcenter"})
 
-    employees = load_employees()
-
-    plan = ShiftPlanner(employees, start_week, end_week)
+    plan = ShiftPlanner(start_week, end_week)
 
     shift_plan = plan.get_shift_plan()
-    employees = plan.employees
+    employees = sorted(plan.employees, key=lambda emp: emp.name)
 
     max_len_areas = {
         BEREICHE[1]: find_max_employee_count(shift_plan, BEREICHE[1]),

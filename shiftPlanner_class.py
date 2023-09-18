@@ -1,10 +1,12 @@
 from constants import *
 import random
+import json
+from employee_class import Employee
 
 
 class ShiftPlanner:
-    def __init__(self, employees, start_week=1, end_week=52):
-        self.employees = employees
+    def __init__(self, start_week=1, end_week=52):
+        self.employees = []
         self.start_week = start_week
         self.end_week = end_week
         self.shift_plan = {}
@@ -12,6 +14,40 @@ class ShiftPlanner:
         self.error_areas = []
         self.run()
         self.update_employees_with_best_plan()
+
+    def load_employees(self):
+        try:
+            with open(FILE_NAME, "r", encoding="utf-8") as file:
+                data = json.load(file)
+                employees_data = data["employees"]
+        except FileNotFoundError:
+            return print("Keine Mitarbeiterliste verfügbar")
+
+        employees = []
+
+        random.shuffle(employees_data)
+        # Create the employees classes
+        list_of_last_shift_in_model_2 = []
+        for employee_data in employees_data:
+            employee = Employee(
+                employee_data[EMPLOYEE_KEY[0]],
+                employee_data[EMPLOYEE_KEY[1]],
+                employee_data[EMPLOYEE_KEY[2]],
+                employee_data[EMPLOYEE_KEY[3]],
+                employee_data[EMPLOYEE_KEY[4]],
+                employee_data[EMPLOYEE_KEY[5]],
+            )
+            # set the start shift for the emp with the schichtmodel 2
+            if employee.schicht_model == SCHICHT_MODELS[2]:
+                result = employee.set_start_shift(list_of_last_shift_in_model_2)
+                if result in list_of_last_shift_in_model_2:
+                    list_of_last_shift_in_model_2.remove(result)
+                list_of_last_shift_in_model_2.insert(0, result)
+
+            # Add emp to list
+            employees.append(employee)
+
+        return employees
 
     def get_shift_plan(self):
         return self.shift_plan
@@ -53,6 +89,7 @@ class ShiftPlanner:
         return min_key
 
     def shift_creator(self):
+        self.employees = self.load_employees()
         # Iterate over weeks
         for week in range(self.start_week, self.end_week + 1):
             available_employees = []
@@ -248,9 +285,9 @@ class ShiftPlanner:
         best_employees = None
         best_run = None
 
-        for iteration in range(max_iterations):
+        for iteration in range(1, max_iterations):
             self.shift_creator()
-            print(f"run:{iteration + 1}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}")
+            print(f"run:{iteration}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}")
 
             # best cast of errors areas + 1, shift + 1/3
             if len(self.error_areas) + len(self.error_shift) / 3 < min_length:

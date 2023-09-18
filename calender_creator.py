@@ -219,6 +219,53 @@ def create_calender(year, start_week=1, end_week=52):
             col += 1
         row += 1
 
+    # Add count of employees for the area in the weeks
+    col = 8
+    row = start_row
+
+    worksheet.merge_range(
+        row,
+        col,
+        row,
+        col + 4,
+        "Anzahle der Mitarbeiter in Bereichen",
+        bordered_format,
+    )
+    header_info = [
+        "Woche",
+        "Schicht",
+        BEREICHE[1],
+        BEREICHE[2],
+        BEREICHE[3],
+    ]
+    row += 1
+    # Add header to excel
+    for string in header_info:
+        worksheet.write(row, col, string, bordered_format)
+        col += 1
+
+    row += 1
+    col = 8
+    for week, shifts in shift_plan.items():
+        for shift, areas in shifts.items():
+            worksheet.write(row, col, f"{week}", bordered_format)
+            col += 1
+            worksheet.write(row, col, f"{shift}", bordered_format)
+            col += 1
+            for area, emp_list in areas.items():
+                # change color to red if the area has not enough employees
+                color = bordered_format
+                if (
+                    (area == BEREICHE[1] and len(emp_list) < 3)
+                    or (area == BEREICHE[2] and len(emp_list) < 2)
+                    or (area == BEREICHE[3] and len(emp_list) < 2)
+                ):
+                    color["font_color"] = "red"
+                worksheet.write(row, col, len(emp_list), color)
+                col += 1
+            col = 8
+            row += 1
+
     # --------------------------------------------------------------------------------
     # Create Error view
     # --------------------------------------------------------------------------------

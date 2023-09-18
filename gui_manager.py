@@ -31,7 +31,16 @@ class GUIManager:
 
     def sort_data(self):
         if "employees" in self.data:
-            self.data["employees"] = sorted(self.data["employees"], key=lambda x: x[EMPLOYEE_KEY[0]])
+
+            def custom_sort_key(employee):
+                name = employee[EMPLOYEE_KEY[0]]
+                # Split the name into a tuple of string and numeric parts
+                parts = re.split(r"(\d+)", name)
+                # Convert numeric parts to integers for sorting
+                numeric_parts = [int(part) if part.isdigit() else part for part in parts]
+                return numeric_parts
+
+            self.data["employees"] = sorted(self.data["employees"], key=custom_sort_key)
 
     def load_data(self):
         try:

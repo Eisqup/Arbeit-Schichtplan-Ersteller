@@ -3,6 +3,7 @@ import datetime
 from constants import *
 from shiftPlanner_class import ShiftPlanner
 import json
+import re
 
 
 # get the max number of employees which are working in a area from the year.
@@ -48,7 +49,19 @@ def create_calender(year, start_week=1, end_week=52):
     plan = ShiftPlanner(start_week, end_week)
 
     shift_plan = plan.get_shift_plan()
-    employees = sorted(plan.employees, key=lambda emp: emp.name)
+
+    # Define the custom sorting key function
+    def custom_sort_key(employee):
+        name = employee.name
+        # Split the name into a tuple of string and numeric parts
+        parts = re.split(r"(\d+)", name)
+        # Convert numeric parts to integers for sorting
+        numeric_parts = [int(part) if part.isdigit() else part for part in parts]
+        return numeric_parts
+
+    # Sort the best_employees list using the custom sorting key
+    employees = plan.employees
+    employees.sort(key=custom_sort_key)
 
     max_len_areas = {
         BEREICHE[1]: find_max_employee_count(shift_plan, BEREICHE[1]),

@@ -88,7 +88,7 @@ class ShiftPlanner:
 
         return min_key
 
-    def shift_creator(self):
+    def create_shift_plan(self):
         self.employees = self.load_employees()
         # Iterate over weeks
         for week in range(self.start_week, self.end_week + 1):
@@ -153,8 +153,26 @@ class ShiftPlanner:
                         emp for emp in matching_employees if emp.get_count_of_shifts(shift) == lowest_count
                     ]
 
-                    # Randomly select one employee from the filtered list
-                    selected_employee = random.choice(matching_employees)
+                    # Initialize a list for better matching employees
+                    better_matching_employees = []
+
+                    # create a list where Employee had the same shift last week but not the week before
+                    for emp in matching_employees:
+                        if (
+                            week > 2
+                            and emp.emp_shifts_dict[week - 1] == shift
+                            and emp.emp_shifts_dict[week - 2] != shift
+                        ):
+                            # Employee had the same shift last week and not the week before
+                            # Considered a better match
+                            better_matching_employees.append(emp)
+
+                    if better_matching_employees:
+                        # Randomly select one employee from the better matching list
+                        selected_employee = random.choice(better_matching_employees)
+                    else:
+                        # If there are no better matching employees, select randomly from the original matching list
+                        selected_employee = random.choice(matching_employees)
 
                     # Assign the best employee to the shift
                     self.assign_shift(selected_employee, shift)
@@ -286,7 +304,7 @@ class ShiftPlanner:
         best_run = None
 
         for iteration in range(1, max_iterations):
-            self.shift_creator()
+            self.create_shift_plan()
             print(f"run:{iteration}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}")
 
             # best cast of errors areas + 1, shift + 1/3

@@ -96,7 +96,7 @@ class ShiftPlanner:
     def create_shift_plan(self):
         # Function to check for a buddy an add him to the shift
         def search_linked_emp(selected_employee, available_employees, shift, week):
-            if hasattr(selected_employee, EMPLOYEE_KEY[6]):
+            if getattr(selected_employee, EMPLOYEE_KEY[6]) is not None:
                 for emp in available_employees:
                     if emp.name == selected_employee.link:
                         emp_count = emp.get_count_of_shifts(shift)
@@ -173,8 +173,8 @@ class ShiftPlanner:
                         emp for emp in matching_employees if emp.get_count_of_shifts(shift) == lowest_count
                     ]
 
-                    # Initialize a list for better matching employees
-                    better_matching_employees = []
+                    # Create a list to insert emp double for a better chance to get picked
+                    random_choose_list = matching_employees.copy()
 
                     # create a list where Employee had the same shift last week but not the week before
                     for emp in matching_employees:
@@ -185,14 +185,9 @@ class ShiftPlanner:
                         ):
                             # Employee had the same shift last week and not the week before
                             # Considered a better match
-                            better_matching_employees.append(emp)
+                            random_choose_list.append(emp)
 
-                    if better_matching_employees:
-                        # Randomly select one employee from the better matching list
-                        selected_employee = random.choice(better_matching_employees)
-                    else:
-                        # If there are no better matching employees, select randomly from the original matching list
-                        selected_employee = random.choice(matching_employees)
+                    selected_employee = random.choice(random_choose_list)
 
                     # Assign the best employee to the shift
                     self.assign_shift(selected_employee, shift)

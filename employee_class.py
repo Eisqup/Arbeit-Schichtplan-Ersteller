@@ -11,25 +11,17 @@ class Employee:
         self.urlaub_kw = [int(kw) for kw in urlaub_kw]  # "urlaub_kw": [2, 8, 14]
         self.urlaub_tage = urlaub_tage  # "urlaub_tage": ["10.01", "12.02"]
 
-        self.link = link
+        self.link = link  # add here a buddy if he want to work with someone most time together
 
         self.start_shift_index_num = None
         self.counter_start_shift = 0
         self.emp_shifts_dict = {}
         self.shift_count_all = {}
+        self.employee_list = []
 
         # Add vacation to the dict
         for vacation_week in self.urlaub_kw:
             self.add_shift(int(vacation_week), "x")
-
-    def has_link(self, available_employees, shift, lowest_count):
-        if self.link:
-            for emp in available_employees:
-                if emp.name == self.link:
-                    emp_count = emp.get_count_of_shifts(shift)
-                    if abs(emp_count - lowest_count) <= 1:
-                        return emp
-        return False
 
     def set_start_shift(self, list_for_last_rhythmus_in_model_2):
         for rhythmus in self.schicht_rhythmus:

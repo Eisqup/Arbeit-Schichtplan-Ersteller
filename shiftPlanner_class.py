@@ -94,6 +94,20 @@ class ShiftPlanner:
         return min_key
 
     def create_shift_plan(self):
+        # Function to check for a buddy an add him to the shift
+        def search_linked_emp(selected_employee, available_employees, shift, week):
+            if selected_employee.link:
+                for emp in available_employees:
+                    if emp.name == selected_employee.link:
+                        emp_count = emp.get_count_of_shifts(shift)
+                        if (
+                            abs(emp_count - selected_employee.get_count_of_shifts(shift)) <= 1
+                        ):  # Check if Buddy hast +-1 of the same shift
+                            # add buddy if the parameter are ok
+                            self.assign_shift(emp, shift)
+                            available_employees.remove(emp)
+                            emp.add_shift(week, shift)
+
         self.employees = self.load_employees()
         # Iterate over weeks
         for week in range(self.start_week, self.end_week + 1):
@@ -121,6 +135,7 @@ class ShiftPlanner:
                 self.assign_shift(employee, shift)
                 removed_employees.append(employee)
                 employee.add_shift(week, shift)
+                search_linked_emp(employee, available_employees, shift, week)
 
             if removed_employees:
                 for emp in removed_employees:
@@ -183,15 +198,8 @@ class ShiftPlanner:
                     self.assign_shift(selected_employee, shift)
                     available_employees.remove(selected_employee)
                     selected_employee.add_shift(week, shift)
+                    search_linked_emp(employee, available_employees, shift, week)
 
-                    # check if emp has a buddy and he has the same amount of count +/-1 and add him to the shift
-                    result_emp_linked = selected_employee.has_link(available_employees, shift, lowest_count)
-
-                    if result_emp_linked:
-                        # add buddy if the parameter are ok
-                        self.assign_shift(result_emp_linked, shift)
-                        available_employees.remove(result_emp_linked)
-                        result_emp_linked.add_shift(week, shift)
                 else:
                     # Handle the case where no suitable employee is found for any shift
 
@@ -259,7 +267,6 @@ class ShiftPlanner:
             area_with_most_employees = max(areas, key=lambda area: len(areas[area]))
 
             if employees_with_two_areas:
-                print(3, week, shift, area)
                 # Find employees with both area and area_with_most_employees in their bereiche
                 employees_with_both_areas = [
                     employee
@@ -287,10 +294,8 @@ class ShiftPlanner:
                 selected_employee = random.choice(employees_with_area)
                 areas[area].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
-                print(1, week, shift, area)
 
             else:
-                print(2, week, shift, area)
 
                 def find_employees_with_area_ability(shift_with_emp, areas, area_needed):
                     for employee in shift_with_emp:

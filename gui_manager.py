@@ -202,7 +202,16 @@ class GUIManager:
 
         # Listbox widget to display employee names
         self.employee_listbox = tk.Listbox(self.window, height=5, width=30)
-        self.employee_listbox.grid(row=self.start_row + 1, column=4, padx=10, pady=5, rowspan=row - 3, sticky="nsew")
+        self.employee_listbox.grid(row=self.start_row + 1, column=4, padx=10, pady=5, rowspan=row - 4, sticky="nsew")
+
+        # Link employee
+        self.delete_button = tk.Button(
+            self.window,
+            text="Mitarbeiter verlinken",
+            width=self.button_size,
+            command=self.delete_employee,
+        )
+        self.delete_button.grid(row=row - 2, column=3, columnspan=2, pady=10)
 
         # Delete button
         self.delete_button = tk.Button(

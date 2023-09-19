@@ -186,6 +186,7 @@ class ShiftPlanner:
 
                     # check if emp has a buddy and he has the same amount of count +/-1 and add him to the shift
                     result_emp_linked = selected_employee.has_link(available_employees, shift, lowest_count)
+
                     if result_emp_linked:
                         # add buddy if the parameter are ok
                         self.assign_shift(result_emp_linked, shift)
@@ -196,6 +197,26 @@ class ShiftPlanner:
 
                     self.error_shift.append(f"No employee found in shift: {shift} for week: {week}")
                     self.assign_shift("No employee found", shift)
+
+            # Remove "No employee found" employees from shifts
+            self.shift_1_list = [employee for employee in self.shift_1_list if employee != "No employee found"]
+            self.shift_2_list = [employee for employee in self.shift_2_list if employee != "No employee found"]
+            self.shift_3_list = [employee for employee in self.shift_3_list if employee != "No employee found"]
+
+            # check if the list not fair sorted and create error for it
+            len_shift_1 = len(self.shift_1_list)
+            len_shift_2 = len(self.shift_2_list)
+            len_shift_3 = len(self.shift_3_list)
+
+            # Check if the shifts are evenly balanced (+-1)
+            shift_counts = [len_shift_1, len_shift_2, len_shift_3]
+            max_shifts = max(shift_counts)
+            min_shifts = min(shift_counts)
+
+            if max_shifts - min_shifts > 1:
+                # The shifts are not evenly balanced, create an error
+                # print("here", week)
+                self.error_shift.append(f"Shifts are not evenly balanced. Week:{week}")
 
             self.shift_1_list = self.move_employee_to_area(self.shift_1_list, SCHICHT_RHYTHMUS[1], week)
             self.shift_2_list = self.move_employee_to_area(self.shift_2_list, SCHICHT_RHYTHMUS[2], week)
@@ -214,9 +235,6 @@ class ShiftPlanner:
             BEREICHE[2]: [],  # Bohren
             BEREICHE[3]: [],  # Fräsen
         }
-
-        # Remove "No employee found" strings
-        shift_with_emp = [employee for employee in shift_with_emp if employee != "No employee found"]
 
         # Add employee with just one area to work
         for employee in shift_with_emp:
@@ -241,6 +259,7 @@ class ShiftPlanner:
             area_with_most_employees = max(areas, key=lambda area: len(areas[area]))
 
             if employees_with_two_areas:
+                print(3, week, shift, area)
                 # Find employees with both area and area_with_most_employees in their bereiche
                 employees_with_both_areas = [
                     employee
@@ -263,12 +282,15 @@ class ShiftPlanner:
 
             # Add emp with all 3 Area as ability
             employees_with_area = [employee for employee in shift_with_emp if area in employee.bereiche]
+
             if employees_with_area:
                 selected_employee = random.choice(employees_with_area)
                 areas[area].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
+                print(1, week, shift, area)
 
             else:
+                print(2, week, shift, area)
 
                 def find_employees_with_area_ability(shift_with_emp, areas, area_needed):
                     for employee in shift_with_emp:
@@ -285,16 +307,13 @@ class ShiftPlanner:
                                     areas[area_needed].append(employee_to_switch)
                                     areas[assigned_area].append(employee)
 
-                                    return True  # Found a suitable employee
+                                    return False  # Found a suitable employee
 
-                    return False  # No suitable employee found
+                    return True  # No suitable employee found
 
                 result = find_employees_with_area_ability(shift_with_emp, areas, area)
 
                 if result:
-                    continue
-
-                else:
                     selected_employee = random.choice(shift_with_emp)
                     area_ran = random.choice(selected_employee.bereiche)
                     areas[area_ran].append(selected_employee)
@@ -304,6 +323,8 @@ class ShiftPlanner:
                     shift_with_emp.remove(selected_employee)
                     # break  # rest of emp cant be sort in
 
+        if (len(areas[BEREICHE[3]]) > len(areas[BEREICHE[1]])) or (len(areas[BEREICHE[2]]) > len(areas[BEREICHE[3]])):
+            self.error_areas.append(f"Areas are not evenly balanced. Week:{week}")
         return areas
 
     def reset(self):

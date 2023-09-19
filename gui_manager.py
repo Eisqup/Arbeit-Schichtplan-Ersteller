@@ -54,6 +54,11 @@ class GUIManager:
             with open(FILE_NAME, "w", encoding="utf-8") as file:
                 json.dump(self.data, file, indent=2)
 
+    def save_data_to_file(self):
+        # Save the updated data back to the file
+        with open(FILE_NAME, "w", encoding="utf-8") as file:
+            json.dump(self.data, file, indent=2)
+
     def create_gui(self):
         row = self.start_row
         # Label for titles on the left and right
@@ -207,9 +212,9 @@ class GUIManager:
         # Link employee
         self.delete_button = tk.Button(
             self.window,
-            text="Mitarbeiter verlinken",
+            text="Hinzufügen/Entfernen\nMitarbeiter link",
             width=self.button_size,
-            command=self.delete_employee,
+            command=self.link_employees_window,
         )
         self.delete_button.grid(row=row - 2, column=3, columnspan=2, pady=10)
 
@@ -304,8 +309,7 @@ class GUIManager:
                 self.sort_data()
 
             # Save the updated data back to the file
-            with open(FILE_NAME, "w", encoding="utf-8") as file:
-                json.dump(self.data, file, indent=2)
+            self.save_data_to_file()
 
             if not employee_exists:
                 message = "Mitarbeiter hinzugefügt:\n"
@@ -351,9 +355,10 @@ class GUIManager:
                 if result == "yes":
                     # Delete the employee
                     deleted_employee = self.data["employees"].pop(selected_index)
+
                     # Save the updated data back to the file
-                    with open(FILE_NAME, "w", encoding="utf-8") as file:
-                        json.dump(self.data, file, indent=2)
+                    self.save_data_to_file()
+
                     # Clear the form fields
                     self.reset_form_fields()
                     # Update the Listbox by removing the deleted employee's name
@@ -511,6 +516,118 @@ class GUIManager:
         ok_button.pack()
 
         dialog.mainloop()
+
+    def link_employees_window(self):
+        # Get the index of the selected employee in the main listbox
+        selected_index = self.employee_listbox.curselection()
+
+        if not selected_index:
+            return  # No employee selected
+
+        selected_index = int(selected_index[0])
+        selected_employee = self.data["employees"][selected_index]
+
+        # Check if the selected employee has a link
+        if EMPLOYEE_KEY[6] in selected_employee:
+            # Ask for confirmation to remove the link
+            result = messagebox.askquestion(
+                "Bestätigen",
+                f"{selected_employee[EMPLOYEE_KEY[0]]} hat bereits einen Link zu {selected_employee[EMPLOYEE_KEY[6]]}. Möchten Sie den Link entfernen?",
+            )
+
+            if result == "no":
+                return  # Link removal canceled
+
+            # Remove the link from both employees
+            linked_employee_name = selected_employee[EMPLOYEE_KEY[6]]
+            for employee in self.data["employees"]:
+                if employee[EMPLOYEE_KEY[0]] == linked_employee_name:
+                    del employee[EMPLOYEE_KEY[6]]
+                    break  # Assuming there is only one link
+            del selected_employee[EMPLOYEE_KEY[6]]
+
+            # Save the updated data back to the file
+            self.save_data_to_file()
+
+            # Update the Listbox to reflect the change
+            self.employee_listbox.delete(0, tk.END)
+            self.load_employee_names_for_listbox()
+
+            # Show a confirmation message
+            messagebox.showinfo(
+                "Link Entfernt",
+                f"Der Link zwischen {selected_employee[EMPLOYEE_KEY[0]]} und {linked_employee_name} wurde entfernt.",
+            )
+        else:
+            # Create a new window for linking employees
+            link_window = tk.Toplevel(self.window)
+            link_window.title("Link Employees")
+
+            # Filter available employees excluding the selected one
+            available_employees = [
+                employee for index, employee in enumerate(self.data["employees"]) if index != selected_index
+            ]
+
+            # Filter available employees with the same rhythm and model
+            matching_employees = [
+                employee
+                for employee in available_employees
+                if (
+                    employee[EMPLOYEE_KEY[1]] == selected_employee[EMPLOYEE_KEY[1]]
+                    and set(employee[EMPLOYEE_KEY[2]]) == set(selected_employee[EMPLOYEE_KEY[2]])
+                )
+            ]
+
+            if not matching_employees:
+                messagebox.showerror("Error", "Kein Mitarbeiter mit demselben Rhythmus und Modell verfügbar.")
+                link_window.destroy()
+                return
+
+            # Create a label to display the information
+            info_label = tk.Label(
+                link_window,
+                text="Mitarbeiter mit selbem Rhythmus und selbem Modell:",
+                font=("TkDefaultFont", 10, "bold"),
+            )
+            info_label.pack()
+
+            # Create a listbox to display matching available employees
+            available_listbox = tk.Listbox(link_window, height=5, width=30)
+            available_listbox.pack()
+
+            # Populate the listbox with matching available employees
+            for employee in matching_employees:
+                available_listbox.insert(tk.END, employee[EMPLOYEE_KEY[0]])
+
+            # Function to link the selected employees
+            def link_selected_employees():
+                selected_available_index = available_listbox.curselection()
+                if selected_available_index:
+                    selected_available_index = int(selected_available_index[0])
+                    selected_available_employee = matching_employees[selected_available_index]
+
+                    # Update both employees' data with link information
+                    selected_employee[EMPLOYEE_KEY[6]] = selected_available_employee[EMPLOYEE_KEY[0]]
+                    selected_available_employee[EMPLOYEE_KEY[6]] = selected_employee[EMPLOYEE_KEY[0]]
+
+                    # Save the updated data back to the file
+                    self.save_data_to_file()
+
+                    # Update the Listbox to reflect the change
+                    self.employee_listbox.delete(0, tk.END)
+                    self.load_employee_names_for_listbox()
+
+                    # Close the link window
+                    link_window.destroy()
+
+                    # Show a confirmation message
+                    messagebox.showinfo(
+                        "Verlinkt",
+                        f"{selected_employee[EMPLOYEE_KEY[0]]} und {selected_available_employee[EMPLOYEE_KEY[0]]} sind jetzt verlinkt.",
+                    )
+
+            link_button = tk.Button(link_window, text="Link Mitarbeiter", command=link_selected_employees)
+            link_button.pack()
 
 
 if __name__ == "__main__":

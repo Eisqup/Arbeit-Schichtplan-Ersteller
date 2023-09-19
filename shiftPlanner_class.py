@@ -96,12 +96,12 @@ class ShiftPlanner:
     def create_shift_plan(self):
         # Function to check for a buddy an add him to the shift
         def search_linked_emp(selected_employee, available_employees, shift, week):
-            if selected_employee.link:
+            if hasattr(selected_employee, EMPLOYEE_KEY[6]):
                 for emp in available_employees:
                     if emp.name == selected_employee.link:
                         emp_count = emp.get_count_of_shifts(shift)
                         if (
-                            abs(emp_count - selected_employee.get_count_of_shifts(shift)) <= 1
+                            abs(emp_count - selected_employee.get_count_of_shifts(shift)) < 1
                         ):  # Check if Buddy hast +-1 of the same shift
                             # add buddy if the parameter are ok
                             self.assign_shift(emp, shift)
@@ -198,7 +198,7 @@ class ShiftPlanner:
                     self.assign_shift(selected_employee, shift)
                     available_employees.remove(selected_employee)
                     selected_employee.add_shift(week, shift)
-                    search_linked_emp(employee, available_employees, shift, week)
+                    search_linked_emp(selected_employee, available_employees, shift, week)
 
                 else:
                     # Handle the case where no suitable employee is found for any shift

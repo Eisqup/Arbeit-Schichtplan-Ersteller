@@ -49,6 +49,13 @@ class ShiftPlanner:
                     list_of_last_shift_in_model_2.remove(result)
                 list_of_last_shift_in_model_2.insert(0, result)
 
+            if self.start_week > 1:
+                for i in range(1, self.start_week):
+                    employee.add_shift(i, "X")
+            if self.end_week < 52:
+                for i in range(self.end_week, 53):
+                    employee.add_shift(i, "X")
+
             # Add emp to list
             employees.append(employee)
 
@@ -142,12 +149,21 @@ class ShiftPlanner:
                     available_employees.remove(emp)
 
             # Add the rest of them employees with SCHICHT_RHYTHMUS[3] // Add by pro Früh > Spät > Nacht
+            # average_shifts = None
+            # first_run = True
             while available_employees:
                 # Check which shift has the lowest number of employees
-                shift = self.determine_priority_key_by_lengths(
-                    [self.shift_1_list, self.shift_2_list, self.shift_3_list],
-                    [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[2], SCHICHT_RHYTHMUS[3]],
-                )
+                if len(self.shift_2_list) > 9:
+                    shift = self.determine_priority_key_by_lengths(
+                        [self.shift_1_list, self.shift_3_list],
+                        [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[3]],
+                    )
+
+                else:
+                    shift = self.determine_priority_key_by_lengths(
+                        [self.shift_1_list, self.shift_2_list, self.shift_3_list],
+                        [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[2], SCHICHT_RHYTHMUS[3]],
+                    )
 
                 # Find the "best" employee based on your criteria
                 # Sort available employees by the number of shifts
@@ -161,7 +177,21 @@ class ShiftPlanner:
                     matching_employees = [
                         employee for employee in available_employees if employee.get_prio_rhythmus_by_index(i) == shift
                     ]
+                    # if first_run == False and shift == SCHICHT_RHYTHMUS[3]:
+                    # # Create a new list of employees who meet the criteria (less than or equal to average + 2)
+                    # matching_employees = [
+                    #     employee
+                    #     for employee in matching_employees
+                    #     if employee.get_count_of_shifts(shift) <= average_shifts + 1
+                    # ]
                     if matching_employees:
+                        # if first_run and shift == SCHICHT_RHYTHMUS[3]:
+                        #     # average check to make sure the shifts are even for night shift
+                        #     average_shifts = sum(
+                        #         employee.get_count_of_shifts(shift) for employee in matching_employees
+                        #     ) / len(matching_employees)
+                        #     first_run = False
+
                         break  # Exit the loop if matching employees are found
 
                 if matching_employees:
@@ -177,15 +207,12 @@ class ShiftPlanner:
                     random_choose_list = matching_employees.copy()
 
                     # create a list where Employee had the same shift last week but not the week before
-                    for emp in matching_employees:
-                        if (
-                            week > 2
-                            and emp.emp_shifts_dict[week - 1] == shift
-                            and emp.emp_shifts_dict[week - 2] != shift
-                        ):
-                            # Employee had the same shift last week and not the week before
-                            # Considered a better match
-                            random_choose_list.append(emp)
+                    if week > 2:
+                        for emp in matching_employees:
+                            if emp.emp_shifts_dict[week - 1] == shift and emp.emp_shifts_dict[week - 2] != shift:
+                                # Employee had the same shift last week and not the week before
+                                # Considered a better match
+                                random_choose_list.append(emp)
 
                     selected_employee = random.choice(random_choose_list)
 
@@ -197,7 +224,6 @@ class ShiftPlanner:
 
                 else:
                     # Handle the case where no suitable employee is found for any shift
-
                     self.error_shift.append(f"No employee found in shift: {shift} for week: {week}")
                     self.assign_shift("No employee found", shift)
 
@@ -332,7 +358,7 @@ class ShiftPlanner:
         self.error_shift = []
         self.error_areas = []
 
-    def run(self, max_iterations=100):
+    def run(self, max_iterations=PROGRAM_RUNS):
         def decode(text):
             return text.encode("utf-8").decode("utf-8")
 
@@ -348,14 +374,14 @@ class ShiftPlanner:
             print(f"run:{iteration}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}")
 
             # best cast of errors areas + 1, shift + 1/3
-            if len(self.error_areas) + len(self.error_shift) / 3 < min_length:
+            if len(self.error_areas) + len(self.error_shift) / 5 < min_length:
                 best_shiftPlan = self.shift_plan
                 best_error_areas = self.error_areas
                 best_error_shift = self.error_shift
                 best_employees = self.employees
                 best_run = iteration
 
-                min_length = len(self.error_areas) + len(self.error_shift) / 3
+                min_length = len(self.error_areas) + len(self.error_shift) / 5
 
             if not self.error_areas and not self.error_shift:  # Break if no errors
                 break

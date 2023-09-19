@@ -31,14 +31,16 @@ class GUIManager:
 
     def sort_data(self):
         if "employees" in self.data:
+            # def custom_sort_key(employee):
+            #     name = employee[EMPLOYEE_KEY[0]]
+            #     # Split the name into a tuple of string and numeric parts
+            #     parts = re.split(r"(\d+)", name)
+            #     # Convert numeric parts to integers for sorting
+            #     numeric_parts = [int(part) if part.isdigit() else part for part in parts]
+            #     return numeric_parts
 
             def custom_sort_key(employee):
-                name = employee[EMPLOYEE_KEY[0]]
-                # Split the name into a tuple of string and numeric parts
-                parts = re.split(r"(\d+)", name)
-                # Convert numeric parts to integers for sorting
-                numeric_parts = [int(part) if part.isdigit() else part for part in parts]
-                return numeric_parts
+                return employee[EMPLOYEE_KEY[0]]
 
             self.data["employees"] = sorted(self.data["employees"], key=custom_sort_key)
 
@@ -357,7 +359,7 @@ class GUIManager:
                     deleted_employee = self.data["employees"].pop(selected_index)
 
                     # Save the updated data back to the file
-                    self.save_data_to_file()
+                    self.save_data_to_file
 
                     # Clear the form fields
                     self.reset_form_fields()

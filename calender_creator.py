@@ -63,11 +63,7 @@ def create_calender(year, start_week=1, end_week=52):
     employees = plan.employees
     employees.sort(key=custom_sort_key)
 
-    max_len_areas = {
-        BEREICHE[1]: find_max_employee_count(shift_plan, BEREICHE[1]),
-        BEREICHE[2]: find_max_employee_count(shift_plan, BEREICHE[2]),
-        BEREICHE[3]: find_max_employee_count(shift_plan, BEREICHE[3]),
-    }
+    max_len_areas = {area: find_max_employee_count(shift_plan, area) for area in BEREICHE.values()}
 
     for week in range(start_week, end_week + 1):
         # Create list of employees in vacation
@@ -106,7 +102,7 @@ def create_calender(year, start_week=1, end_week=52):
             row += 2
 
             # Add Bereich to Excel
-            for bereich in BEREICHE.values():
+            for bereich in BEREICHE_EXCEL.values():
                 worksheet.merge_range(
                     row,
                     col - 1,
@@ -206,7 +202,7 @@ def create_calender(year, start_week=1, end_week=52):
         col += 1
 
     row += 1
-
+    worksheet.set_column(start_col, col, 20)
     # Add information from emp to excel
     for employee in employees:
         col = start_col
@@ -231,13 +227,8 @@ def create_calender(year, start_week=1, end_week=52):
         "Anzahle der Mitarbeiter in Bereichen",
         bordered_format,
     )
-    header_info = [
-        "Woche",
-        "Schicht",
-        BEREICHE[1],
-        BEREICHE[2],
-        BEREICHE[3],
-    ]
+    header_info = ["Woche", "Schicht"] + [BEREICHE_EXCEL[area] for area in BEREICHE_EXCEL]
+
     row += 1
     # Add header to excel
     for string in header_info:
@@ -255,13 +246,20 @@ def create_calender(year, start_week=1, end_week=52):
             for area, emp_list in areas.items():
                 # change color to red if the area has not enough employees
                 color = workbook.add_format({"border": 1, "align": "center", "valign": "vcenter"})
+                color.set_bg_color("green")
                 if (
-                    (area == BEREICHE[1] and len(emp_list) < 3)
-                    or (area == BEREICHE[2] and len(emp_list) < 2)
-                    or (area == BEREICHE[3] and len(emp_list) < 2)
+                    (area == BEREICHE_EXCEL[1] and len(emp_list) < 3)
+                    or (area == BEREICHE_EXCEL[2] and len(emp_list) < 2)
+                    or (area == BEREICHE_EXCEL[3] and len(emp_list) < 3)
                 ):
-                    color.set_font_color("red")
-                    print(week, shift, area)
+                    color.set_bg_color("red")
+                    # print(week, shift, area)
+                elif (
+                    (area == BEREICHE_EXCEL[1] and len(emp_list) == 3)
+                    or (area == BEREICHE_EXCEL[2] and len(emp_list) == 2)
+                    or (area == BEREICHE_EXCEL[3] and len(emp_list) == 2)
+                ):
+                    color.set_bg_color("#FFA500")
                 worksheet.write(row, col, len(emp_list), color)
                 col += 1
             col = 8
@@ -291,7 +289,7 @@ def create_calender(year, start_week=1, end_week=52):
                 worksheet.write(row, col, error, bordered_format)
                 row += 1
 
-        worksheet.set_column(start_col, col, 15)
+        worksheet.set_column(start_col, col, 80)
 
     # Schließe die Excel-Datei
     workbook.close()

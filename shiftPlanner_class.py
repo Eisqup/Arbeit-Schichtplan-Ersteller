@@ -239,11 +239,7 @@ class ShiftPlanner:
 
     def move_employee_to_area(self, shift_with_emp, shift, week):
         # Prio order Drehen > Fräsen > Bohren
-        areas = {
-            BEREICHE[1]: [],  # Drehen
-            BEREICHE[2]: [],  # Bohren
-            BEREICHE[3]: [],  # Fräsen
-        }
+        areas = {value: [] for value in BEREICHE.values()}
 
         # Add employee with just one area to work
         for employee in shift_with_emp:
@@ -261,8 +257,8 @@ class ShiftPlanner:
                 area = BEREICHE[1]  # Add rest employees to BEREICH1
             else:
                 area = self.determine_priority_key_by_lengths(
-                    [areas[BEREICHE[1]], areas[BEREICHE[3]], areas[BEREICHE[2]]],
-                    [BEREICHE[1], BEREICHE[3], BEREICHE[2]],
+                    list(areas.values()),
+                    list(BEREICHE.values()),
                 )
 
             area_with_most_employees = max(areas, key=lambda area: len(areas[area]))
@@ -324,19 +320,33 @@ class ShiftPlanner:
                     area_ran = random.choice(selected_employee.bereiche)
                     areas[area_ran].append(selected_employee)
                     shift_with_emp.remove(selected_employee)
-                    if (
-                        not len(areas[BEREICHE[1]]) >= 3
-                        and not len(areas[BEREICHE[2]]) >= 3
-                        and not len(areas[BEREICHE[3]]) >= 3
-                    ):
+
+                    # -------------------------------------------------------------------------------------------------
+                    #                                 ERROR Creating Area
+                    # -------------------------------------------------------------------------------------------------
+
+                    # Check if the length of all areas is less than or equal to 3
+                    if all(len(areas[area]) <= 3 for area in BEREICHE.values()):
                         self.error_areas.append(
-                            f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
+                            f"Can't find an employee for the areas in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
                         )
                     # break  # rest of emp cant be sort in
 
-        if (len(areas[BEREICHE[3]]) > len(areas[BEREICHE[1]])) or (len(areas[BEREICHE[2]]) > len(areas[BEREICHE[3]])):
-            self.error_areas.append(f"Areas are not evenly balanced. Week:{week}")
-        return areas
+        # Get the list of areas in the order of the Constants
+        sorted_areas = [areas[area] for area in BEREICHE.values()]
+
+        # Check if the length of areas is increasing from the last index to the first index
+        for i in range(len(sorted_areas) - 1):
+            if len(sorted_areas[i]) < 3:  # Führ Drehen Fräsen
+                self.error_areas.append(f"Bereich unterbesetzt. Week:{week} shift:{shift} area:{BEREICHE[i +1]}")
+        for i in range(len(sorted_areas) - 1):
+            if abs(len(sorted_areas[i + 1]) - len(sorted_areas[i])) >= 2 and len(sorted_areas[i]) <= 3:
+                self.error_areas.append(f"Areas are not evenly balanced. Week:{week} shift:{shift}")
+                break  # Exit the loop if the condition is not met
+
+        # -------------------------------------------------------------------------------------------------
+
+        return {v: areas[v] for v in BEREICHE_EXCEL.values()}
 
     def reset(self):
         self.shift_plan = {}
@@ -359,14 +369,14 @@ class ShiftPlanner:
             print(f"run:{iteration}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}")
 
             # best cast of errors areas + 1, shift + 1/3
-            if len(self.error_areas) + len(self.error_shift) / 5 < min_length:
+            if len(self.error_areas) + len(self.error_shift) / 10 < min_length:
                 best_shiftPlan = self.shift_plan
                 best_error_areas = self.error_areas
                 best_error_shift = self.error_shift
                 best_employees = self.employees
                 best_run = iteration
 
-                min_length = len(self.error_areas) + len(self.error_shift) / 5
+                min_length = len(self.error_areas) + len(self.error_shift) / 10
 
             if not self.error_areas and not self.error_shift:  # Break if no errors
                 break

@@ -1,1 +1,1 @@
-Add Buddy system to GUI in program it is implemented already
+Check again a emp swap over some shifts

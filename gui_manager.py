@@ -155,7 +155,7 @@ class GUIManager:
 
         # Checkbuttons for selecting Bereich
         row += 1
-        for key, value in BEREICHE.items():
+        for key, value in BEREICHE_EXCEL.items():
             self.bereich_var = tk.BooleanVar()
             self.bereich_vars.append(self.bereich_var)
             self.bereich_checkbutton = Checkbutton(
@@ -255,7 +255,7 @@ class GUIManager:
         urlaub_kw = self.split_and_check_input(self.urlaub_kw_entry.get(), is_weeks=True)
         urlaub_day = self.split_and_check_input(self.urlaub_day_entry.get())
         self.selected_bereich_list = [
-            list(BEREICHE.values())[index] for index, var in enumerate(self.bereich_vars) if var.get()
+            list(BEREICHE_EXCEL.values())[index] for index, var in enumerate(self.bereich_vars) if var.get()
         ]
 
         if urlaub_kw is None or urlaub_day is None:
@@ -388,7 +388,7 @@ class GUIManager:
                     var.set(False)
                 # Check the Bereich checkboxes based on the selected employee's data
                 for bereich in selected_employee[EMPLOYEE_KEY[3]]:
-                    index = list(BEREICHE.values()).index(bereich)
+                    index = list(BEREICHE_EXCEL.values()).index(bereich)
                     if 0 <= index < len(self.bereich_vars):
                         self.bereich_vars[index].set(True)
                 # Populate the Rhythmus buttons based on the selected employee's data

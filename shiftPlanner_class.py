@@ -153,17 +153,10 @@ class ShiftPlanner:
             # first_run = True
             while available_employees:
                 # Check which shift has the lowest number of employees
-                if len(self.shift_2_list) > 9:
-                    shift = self.determine_priority_key_by_lengths(
-                        [self.shift_1_list, self.shift_3_list],
-                        [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[3]],
-                    )
-
-                else:
-                    shift = self.determine_priority_key_by_lengths(
-                        [self.shift_1_list, self.shift_2_list, self.shift_3_list],
-                        [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[2], SCHICHT_RHYTHMUS[3]],
-                    )
+                shift = self.determine_priority_key_by_lengths(
+                    [self.shift_1_list, self.shift_3_list, self.shift_2_list],
+                    [SCHICHT_RHYTHMUS[1], SCHICHT_RHYTHMUS[3], SCHICHT_RHYTHMUS[2]],
+                )
 
                 # Find the "best" employee based on your criteria
                 # Sort available employees by the number of shifts
@@ -173,25 +166,12 @@ class ShiftPlanner:
                 matching_employees = []
 
                 # Iterate over schicht_rhythmus indices
-                for i in range(5):
+                for i in range(6):
                     matching_employees = [
                         employee for employee in available_employees if employee.get_prio_rhythmus_by_index(i) == shift
                     ]
-                    # if first_run == False and shift == SCHICHT_RHYTHMUS[3]:
-                    # # Create a new list of employees who meet the criteria (less than or equal to average + 2)
-                    # matching_employees = [
-                    #     employee
-                    #     for employee in matching_employees
-                    #     if employee.get_count_of_shifts(shift) <= average_shifts + 1
-                    # ]
-                    if matching_employees:
-                        # if first_run and shift == SCHICHT_RHYTHMUS[3]:
-                        #     # average check to make sure the shifts are even for night shift
-                        #     average_shifts = sum(
-                        #         employee.get_count_of_shifts(shift) for employee in matching_employees
-                        #     ) / len(matching_employees)
-                        #     first_run = False
 
+                    if matching_employees:
                         break  # Exit the loop if matching employees are found
 
                 if matching_employees:
@@ -343,10 +323,15 @@ class ShiftPlanner:
                     selected_employee = random.choice(shift_with_emp)
                     area_ran = random.choice(selected_employee.bereiche)
                     areas[area_ran].append(selected_employee)
-                    self.error_areas.append(
-                        f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
-                    )
                     shift_with_emp.remove(selected_employee)
+                    if (
+                        not len(areas[BEREICHE[1]]) >= 3
+                        and not len(areas[BEREICHE[2]]) >= 3
+                        and not len(areas[BEREICHE[3]]) >= 3
+                    ):
+                        self.error_areas.append(
+                            f"Can't find an employee for the area: {area} in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
+                        )
                     # break  # rest of emp cant be sort in
 
         if (len(areas[BEREICHE[3]]) > len(areas[BEREICHE[1]])) or (len(areas[BEREICHE[2]]) > len(areas[BEREICHE[3]])):

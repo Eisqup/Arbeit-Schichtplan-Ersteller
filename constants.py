@@ -8,4 +8,4 @@ FILE_NAME = "Mitarbeiter.json"
 
 EMPLOYEE_KEY = ["name", "schicht_model", "schicht_rhythmus", "bereiche", "urlaub_kw", "urlaub_tage", "link"]
 
-PROGRAM_RUNS = 1000
+PROGRAM_RUNS = 10000

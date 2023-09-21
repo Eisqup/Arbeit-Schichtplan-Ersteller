@@ -12,6 +12,7 @@ class ShiftPlanner:
         self.shift_plan = {}
         self.error_shift = []
         self.error_areas = []
+        self.error_areas_run = []
         self.run()
         self.update_employees_with_best_plan()
 
@@ -115,6 +116,34 @@ class ShiftPlanner:
                             available_employees.remove(emp)
                             emp.add_shift(week, shift)
 
+        def check_shift_balance_and_switch_emp():
+            pass
+
+        def creating_errors():
+            # check if the list not fair sorted and create error for it
+            len_shift_1 = len(self.shift_1_list)
+            len_shift_2 = len(self.shift_2_list)
+            len_shift_3 = len(self.shift_3_list)
+
+            # Check if the shifts are evenly balanced (+-1)
+            shift_counts = [len_shift_1, len_shift_2, len_shift_3]
+            max_shifts = max(shift_counts)
+            min_shifts = min(shift_counts)
+
+            if max_shifts - min_shifts > 1:
+                # The shifts are not evenly balanced, create an error
+                # print("here", week)
+                self.error_shift.append(f"Shifts are not evenly balanced. Week:{week}")
+
+            shift_lists = [self.shift_1_list, self.shift_2_list, self.shift_3_list]
+            for i, shift_list in enumerate(shift_lists, start=1):
+                if "No employee found" in shift_list:
+                    self.error_shift.append(f"No employee found in shift {SCHICHT_RHYTHMUS[i]} for week {week}")
+
+            self.shift_1_list = [employee for employee in self.shift_1_list if employee != "No employee found"]
+            self.shift_2_list = [employee for employee in self.shift_2_list if employee != "No employee found"]
+            self.shift_3_list = [employee for employee in self.shift_3_list if employee != "No employee found"]
+
         self.employees = self.load_employees()
         # Iterate over weeks
         for week in range(self.start_week, self.end_week + 1):
@@ -203,39 +232,104 @@ class ShiftPlanner:
                     search_linked_emp(selected_employee, available_employees, shift, week)
 
                 else:
-                    # Handle the case where no suitable employee is found for any shift
-                    self.error_shift.append(f"No employee found in shift: {shift} for week: {week}")
+                    # Handle the case where no suitable employee is found for any shif
                     self.assign_shift("No employee found", shift)
 
-            # Remove "No employee found" employees from shifts
-            self.shift_1_list = [employee for employee in self.shift_1_list if employee != "No employee found"]
-            self.shift_2_list = [employee for employee in self.shift_2_list if employee != "No employee found"]
-            self.shift_3_list = [employee for employee in self.shift_3_list if employee != "No employee found"]
-
-            # check if the list not fair sorted and create error for it
-            len_shift_1 = len(self.shift_1_list)
-            len_shift_2 = len(self.shift_2_list)
-            len_shift_3 = len(self.shift_3_list)
-
-            # Check if the shifts are evenly balanced (+-1)
-            shift_counts = [len_shift_1, len_shift_2, len_shift_3]
-            max_shifts = max(shift_counts)
-            min_shifts = min(shift_counts)
-
-            if max_shifts - min_shifts > 1:
-                # The shifts are not evenly balanced, create an error
-                # print("here", week)
-                self.error_shift.append(f"Shifts are not evenly balanced. Week:{week}")
+            creating_errors()
 
             self.shift_1_list = self.move_employee_to_area(self.shift_1_list, SCHICHT_RHYTHMUS[1], week)
             self.shift_2_list = self.move_employee_to_area(self.shift_2_list, SCHICHT_RHYTHMUS[2], week)
             self.shift_3_list = self.move_employee_to_area(self.shift_3_list, SCHICHT_RHYTHMUS[3], week)
 
-            self.shift_plan[week] = {
-                SCHICHT_RHYTHMUS[1]: self.shift_1_list,
-                SCHICHT_RHYTHMUS[2]: self.shift_2_list,
-                SCHICHT_RHYTHMUS[3]: self.shift_3_list,
-            }
+            if self.error_areas_run:
+                # logic to handel changes after shifts are created and still error in area
+                def find_and_change():
+                    err_list = self.error_areas_run
+                    for err in err_list:
+                        available_employees = []
+                        all_shifts = {
+                            **self.shift_1_list,
+                            **self.shift_2_list,
+                            **self.shift_3_list,
+                        }
+                        for shift, shift_dict in all_shifts.items():
+                            if shift != err[0]:
+                                if all(len(value) >= 3 for value in shift_dict.values()) and any(
+                                    len(value) >= 4 for value in shift_dict.values()
+                                ):
+                                    for area, emp_list in shift_dict.items():
+                                        for emp in emp_list:
+                                            if emp.schicht_model == SCHICHT_MODELS[3]:
+                                                if err[1] in emp.bereiche:
+                                                    if err[0] in emp.schicht_rhythmus:
+                                                        if len(shift_dict[area]) > 3:
+                                                            available_employees.append(
+                                                                [
+                                                                    emp,
+                                                                    emp.name,
+                                                                    area,
+                                                                    shift,
+                                                                    emp.get_count_of_shifts(err[0]),
+                                                                    False,
+                                                                ]
+                                                            )
+                                                        else:
+                                                            ava_emp = []
+                                                            for area_2, emp_list_2 in shift_dict.items():
+                                                                if len(emp_list_2) > 3:
+                                                                    for emp_2 in emp_list_2:
+                                                                        if area in emp_2.bereiche:
+                                                                            ava_emp.append([emp_2, area_2])
+                                                            if ava_emp:
+                                                                selected_emp = random.choice(ava_emp)
+                                                                available_employees.append(
+                                                                    [
+                                                                        emp,
+                                                                        emp.name,
+                                                                        area,
+                                                                        shift,
+                                                                        emp.get_count_of_shifts(err[0]),
+                                                                    ]
+                                                                    + selected_emp
+                                                                )
+                        if available_employees:
+                            # Find the minimum value at index 4 in the original list
+                            min_value = min(item[4] for item in available_employees)
+
+                            # Find all lists with the same lowest value at index 4
+                            min_value_lists = [item for item in available_employees if item[4] == min_value]
+
+                            selected_emp = random.choice(min_value_lists)
+                            # Move emp from shift to the new area if he excist
+                            if selected_emp[5]:
+                                for shift, shift_dict in all_shifts.items():
+                                    if shift == selected_emp[3]:
+                                        shift_dict[selected_emp[2]].remove(selected_emp[0])
+                                        if selected_emp[5]:
+                                            shift_dict[selected_emp[6]].remove(selected_emp[5])
+                                            shift_dict[selected_emp[2]].append(selected_emp[5])
+
+                                    if shift == err[0]:
+                                        shift_dict[err[1]].append(selected_emp[0])
+                                        if len(shift_dict[err[1]]) >= 3:
+                                            self.error_areas_run.remove(err)
+
+                                    if shift == SCHICHT_RHYTHMUS[1]:
+                                        self.shift_1_list = {shift: shift_dict}
+                                    elif shift == SCHICHT_RHYTHMUS[2]:
+                                        self.shift_2_list = {shift: shift_dict}
+                                    elif shift == SCHICHT_RHYTHMUS[3]:
+                                        self.shift_3_list = {shift: shift_dict}
+
+                find_and_change()
+
+            # Crate error for area if are hasnt enogh emp
+            if self.error_areas_run:
+                for err in self.error_areas_run:
+                    self.error_areas.append(f"Bereich unterbesetzt. Week:{week} shift:{err[0]} area:{err[1]}")
+                self.error_areas_run = []
+
+            self.shift_plan[week] = {**self.shift_1_list, **self.shift_2_list, **self.shift_3_list}
 
     def move_employee_to_area(self, shift_with_emp, shift, week):
         # Prio order Drehen > Fräsen > Bohren
@@ -332,13 +426,16 @@ class ShiftPlanner:
                         )
                     # break  # rest of emp cant be sort in
 
+        # Check if the length of areas is increasing from the last index to the first index
+        if len(areas[BEREICHE[1]]) < 3:
+            self.error_areas_run.append([shift, BEREICHE[1]])
+        if len(areas[BEREICHE[2]]) < 3:
+            self.error_areas_run.append([shift, BEREICHE[2]])
+        if len(areas[BEREICHE[3]]) < 2:
+            self.error_areas_run.append([shift, BEREICHE[3]])
+
         # Get the list of areas in the order of the Constants
         sorted_areas = [areas[area] for area in BEREICHE.values()]
-
-        # Check if the length of areas is increasing from the last index to the first index
-        for i in range(len(sorted_areas) - 1):
-            if len(sorted_areas[i]) < 3:  # Führ Drehen Fräsen
-                self.error_areas.append(f"Bereich unterbesetzt. Week:{week} shift:{shift} area:{BEREICHE[i +1]}")
         for i in range(len(sorted_areas) - 1):
             if abs(len(sorted_areas[i + 1]) - len(sorted_areas[i])) >= 2 and len(sorted_areas[i]) <= 3:
                 self.error_areas.append(f"Areas are not evenly balanced. Week:{week} shift:{shift}")
@@ -346,7 +443,7 @@ class ShiftPlanner:
 
         # -------------------------------------------------------------------------------------------------
 
-        return {v: areas[v] for v in BEREICHE_EXCEL.values()}
+        return {shift: {v: areas[v] for v in BEREICHE_EXCEL.values()}}
 
     def reset(self):
         self.shift_plan = {}

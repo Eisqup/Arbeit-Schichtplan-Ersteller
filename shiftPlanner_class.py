@@ -11,8 +11,11 @@ class ShiftPlanner:
         self.end_week = end_week
         self.shift_plan = {}
         self.error_shift = []
+        self.error_shift_balance = []
         self.error_areas = []
         self.error_areas_run = []
+        self.error_areas_balance = []
+        self.error_areas_send = []
         self.run()
         self.update_employees_with_best_plan()
 
@@ -116,9 +119,6 @@ class ShiftPlanner:
                             available_employees.remove(emp)
                             emp.add_shift(week, shift)
 
-        def check_shift_balance_and_switch_emp():
-            pass
-
         def creating_errors():
             # check if the list not fair sorted and create error for it
             len_shift_1 = len(self.shift_1_list)
@@ -133,16 +133,12 @@ class ShiftPlanner:
             if max_shifts - min_shifts > 1:
                 # The shifts are not evenly balanced, create an error
                 # print("here", week)
-                self.error_shift.append(f"Shifts are not evenly balanced. Week:{week}")
+                self.error_shift_balance.append(f"Shifts are not evenly balanced. Week:{week}")
 
             shift_lists = [self.shift_1_list, self.shift_2_list, self.shift_3_list]
             for i, shift_list in enumerate(shift_lists, start=1):
                 if "No employee found" in shift_list:
                     self.error_shift.append(f"No employee found in shift {SCHICHT_RHYTHMUS[i]} for week {week}")
-
-            self.shift_1_list = [employee for employee in self.shift_1_list if employee != "No employee found"]
-            self.shift_2_list = [employee for employee in self.shift_2_list if employee != "No employee found"]
-            self.shift_3_list = [employee for employee in self.shift_3_list if employee != "No employee found"]
 
         self.employees = self.load_employees()
         # Iterate over weeks
@@ -243,7 +239,7 @@ class ShiftPlanner:
 
             if self.error_areas_run:
                 # logic to handel changes after shifts are created and still error in area
-                def find_and_change():
+                def find_and_change_emp_if_error():
                     err_list = self.error_areas_run
                     for err in err_list:
                         available_employees = []
@@ -266,7 +262,7 @@ class ShiftPlanner:
                                                             emp.get_count_of_shifts(err[0]) > 5
                                                             and err[0] not in emp.schicht_rhythmus
                                                         ):
-                                                            break #same like row 300
+                                                            break  # same like row 300
                                                         available_employees.append(
                                                             [
                                                                 emp,
@@ -291,14 +287,14 @@ class ShiftPlanner:
                                                                         if area in emp_2.bereiche:
                                                                             ava_emp.append([emp_2, area_2])
                                                         if err[0] in emp.schicht_rhythmus:
-                                                            v = 1
+                                                            factor = 1  # + emp.schicht_rhythmus.index(err[0])
                                                         else:
                                                             if (
-                                                                emp.get_count_of_shifts(err[0]) > 5
+                                                                emp.get_count_of_shifts(err[0]) > 4
                                                                 and err[0] not in emp.schicht_rhythmus
                                                             ):
                                                                 break
-                                                            v = 5  # factor to let even the ppl without spät schicht this rhythmus the shift do if they can swap
+                                                            factor = 4  # factor to let even the ppl without spät schicht this rhythmus the shift do if they can swap
                                                         if ava_emp:
                                                             selected_emp = random.choice(ava_emp)
                                                             available_employees.append(
@@ -307,7 +303,7 @@ class ShiftPlanner:
                                                                     emp.name,
                                                                     area,
                                                                     shift,
-                                                                    emp.get_count_of_shifts(err[0]) / v,
+                                                                    emp.get_count_of_shifts(err[0]) * factor,
                                                                 ]
                                                                 + selected_emp
                                                             )
@@ -342,7 +338,7 @@ class ShiftPlanner:
                                     elif shift == SCHICHT_RHYTHMUS[3]:
                                         self.shift_3_list = {shift: shift_dict}
 
-                find_and_change()
+                find_and_change_emp_if_error()
 
             # Crate error for area if are hasnt enogh emp
             if self.error_areas_run:
@@ -355,6 +351,8 @@ class ShiftPlanner:
     def move_employee_to_area(self, shift_with_emp, shift, week):
         # Prio order Drehen > Fräsen > Bohren
         areas = {value: [] for value in BEREICHE.values()}
+
+        shift_with_emp = [employee for employee in shift_with_emp if employee != "No employee found"]
 
         # Add employee with just one area to work
         for employee in shift_with_emp:
@@ -442,7 +440,7 @@ class ShiftPlanner:
 
                     # Check if the length of all areas is less than or equal to 3
                     if all(len(areas[area]) <= 3 for area in BEREICHE.values()):
-                        self.error_areas.append(
+                        self.error_areas_send.append(
                             f"Can't find an employee for the areas in week: {week} shift {shift} emp:{selected_employee.name} send to {area_ran}"
                         )
                     # break  # rest of emp cant be sort in
@@ -459,7 +457,7 @@ class ShiftPlanner:
         sorted_areas = [areas[area] for area in BEREICHE.values()]
         for i in range(len(sorted_areas) - 1):
             if abs(len(sorted_areas[i + 1]) - len(sorted_areas[i])) >= 2 and len(sorted_areas[i]) <= 3:
-                self.error_areas.append(f"Areas are not evenly balanced. Week:{week} shift:{shift}")
+                self.error_areas_balance.append(f"Areas are not evenly balanced. Week:{week} shift:{shift}")
                 break  # Exit the loop if the condition is not met
 
         # -------------------------------------------------------------------------------------------------
@@ -470,6 +468,9 @@ class ShiftPlanner:
         self.shift_plan = {}
         self.error_shift = []
         self.error_areas = []
+        self.error_areas_balance = []
+        self.error_areas_send = []
+        self.error_shift_balance = []
 
     def run(self, max_iterations=PROGRAM_RUNS):
         def decode(text):
@@ -489,8 +490,8 @@ class ShiftPlanner:
             # best cast of errors areas + 1, shift + 1/3
             if len(self.error_areas) + len(self.error_shift) / 10 < min_length:
                 best_shiftPlan = self.shift_plan
-                best_error_areas = self.error_areas
-                best_error_shift = self.error_shift
+                best_error_areas = self.error_areas + self.error_areas_balance + self.error_areas_send
+                best_error_shift = self.error_shift + self.error_shift_balance
                 best_employees = self.employees
                 best_run = iteration
 
@@ -510,7 +511,9 @@ class ShiftPlanner:
 
         if self.error_areas or self.error_shift:
             print("Max iterations reached or errors still present.")
-            print(f"Best run number: {best_run}")
+            print(
+                f"Best run number: {best_run}\nerror_areas:{len(self.error_areas)}\nerror_shift:{len(self.error_shift)}"
+            )
             if self.error_areas:
                 for error in self.error_areas:
                     print(decode(error))

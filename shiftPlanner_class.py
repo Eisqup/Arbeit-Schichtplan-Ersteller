@@ -261,37 +261,56 @@ class ShiftPlanner:
                                         for emp in emp_list:
                                             if emp.schicht_model == SCHICHT_MODELS[3]:
                                                 if err[1] in emp.bereiche:
-                                                    if err[0] in emp.schicht_rhythmus:
-                                                        if len(shift_dict[area]) > 3:
+                                                    if len(shift_dict[area]) > 3:
+                                                        if (
+                                                            emp.get_count_of_shifts(err[0]) > 5
+                                                            and err[0] not in emp.schicht_rhythmus
+                                                        ):
+                                                            break #same like row 300
+                                                        available_employees.append(
+                                                            [
+                                                                emp,
+                                                                emp.name,
+                                                                area,
+                                                                shift,
+                                                                emp.get_count_of_shifts(err[0]),
+                                                                False,
+                                                            ]
+                                                        )
+                                                    else:
+                                                        ava_emp = []
+                                                        for area_2, emp_list_2 in shift_dict.items():
+                                                            if area_2 == [BEREICHE[3]]:  # Bohren
+                                                                if len(emp_list_2) > 2:
+                                                                    for emp_2 in emp_list_2:
+                                                                        if area in emp_2.bereiche:
+                                                                            ava_emp.append([emp_2, area_2])
+                                                            else:
+                                                                if len(emp_list_2) > 3:  # Drehen Fräsen
+                                                                    for emp_2 in emp_list_2:
+                                                                        if area in emp_2.bereiche:
+                                                                            ava_emp.append([emp_2, area_2])
+                                                        if err[0] in emp.schicht_rhythmus:
+                                                            v = 1
+                                                        else:
+                                                            if (
+                                                                emp.get_count_of_shifts(err[0]) > 5
+                                                                and err[0] not in emp.schicht_rhythmus
+                                                            ):
+                                                                break
+                                                            v = 5  # factor to let even the ppl without spät schicht this rhythmus the shift do if they can swap
+                                                        if ava_emp:
+                                                            selected_emp = random.choice(ava_emp)
                                                             available_employees.append(
                                                                 [
                                                                     emp,
                                                                     emp.name,
                                                                     area,
                                                                     shift,
-                                                                    emp.get_count_of_shifts(err[0]),
-                                                                    False,
+                                                                    emp.get_count_of_shifts(err[0]) / v,
                                                                 ]
+                                                                + selected_emp
                                                             )
-                                                        else:
-                                                            ava_emp = []
-                                                            for area_2, emp_list_2 in shift_dict.items():
-                                                                if len(emp_list_2) > 3:
-                                                                    for emp_2 in emp_list_2:
-                                                                        if area in emp_2.bereiche:
-                                                                            ava_emp.append([emp_2, area_2])
-                                                            if ava_emp:
-                                                                selected_emp = random.choice(ava_emp)
-                                                                available_employees.append(
-                                                                    [
-                                                                        emp,
-                                                                        emp.name,
-                                                                        area,
-                                                                        shift,
-                                                                        emp.get_count_of_shifts(err[0]),
-                                                                    ]
-                                                                    + selected_emp
-                                                                )
                         if available_employees:
                             # Find the minimum value at index 4 in the original list
                             min_value = min(item[4] for item in available_employees)
@@ -300,7 +319,7 @@ class ShiftPlanner:
                             min_value_lists = [item for item in available_employees if item[4] == min_value]
 
                             selected_emp = random.choice(min_value_lists)
-                            # Move emp from shift to the new area if he excist
+                            # Move emp from shift to the other shift
                             if selected_emp[5]:
                                 for shift, shift_dict in all_shifts.items():
                                     if shift == selected_emp[3]:
@@ -310,6 +329,8 @@ class ShiftPlanner:
                                             shift_dict[selected_emp[2]].append(selected_emp[5])
 
                                     if shift == err[0]:
+                                        # print(f"move {selected_emp[0].name}")
+                                        selected_emp[0].add_shift(week, shift)
                                         shift_dict[err[1]].append(selected_emp[0])
                                         if len(shift_dict[err[1]]) >= 3:
                                             self.error_areas_run.remove(err)

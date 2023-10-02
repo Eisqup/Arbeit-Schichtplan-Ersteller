@@ -18,12 +18,11 @@ class Employee:
         self.emp_shifts_dict = {}
         self.shift_count_all = {}
         self.employee_list = []
-
-        # Add vacation to the dict
-        for vacation_week in self.urlaub_kw:
-            self.add_shift(int(vacation_week), "x")
+        self.model_2_count_for_shift_switch = 0
 
     def set_start_shift(self, list_for_last_rhythmus_in_model_2):
+        if self.start_shift_index_num:
+            return self.schicht_rhythmus[self.start_shift_index_num]
         for rhythmus in self.schicht_rhythmus:
             if rhythmus not in list_for_last_rhythmus_in_model_2:
                 self.start_shift_index_num = self.schicht_rhythmus.index(rhythmus)
@@ -40,22 +39,26 @@ class Employee:
         else:
             return False
 
-    def to_dict(self):
-        return {
-            EMPLOYEE_KEY[0]: self.name,
-            EMPLOYEE_KEY[1]: self.schicht_model,
-            EMPLOYEE_KEY[2]: self.schicht_rhythmus,
-            EMPLOYEE_KEY[3]: self.bereiche,
-            EMPLOYEE_KEY[4]: self.urlaub_kw,
-            EMPLOYEE_KEY[5]: self.urlaub_tage,
-        }
-
     def add_shift(self, week, shift):
+        # prozentual aufs Jahr berechnen eventuell mit weiteren input der default true ist. anzahle * Jahres Arbeitswochen / reale Arbeitswochen
         self.emp_shifts_dict[week] = shift
         self.emp_shifts_dict = dict(sorted(self.emp_shifts_dict.items()))
 
-    def get_count_of_shifts(self, shift_to_count):
-        return sum(1 for shift in self.emp_shifts_dict.values() if shift == shift_to_count)
+    def get_count_of_shifts(self, shift_to_count, week_for_factor=False):
+        factor = 1
+
+        if self.emp_shifts_dict and week_for_factor > 1:
+            # create a factor to check work weeks / (work week- vacation week)
+            count = sum(1 for key, shift in self.emp_shifts_dict.items() if shift == "X" and key != week_for_factor)
+            factor = week_for_factor - 1 - count
+            if factor == 0:
+                factor = 1
+            factor = (week_for_factor - 1) / factor
+            factor = sum(1 for key, shift in self.emp_shifts_dict.items() if shift == shift_to_count and key != week_for_factor) * factor
+            return factor
+
+        factor = sum(1 for shift in self.emp_shifts_dict.values() if shift == shift_to_count) * factor
+        return factor
 
     def get_prio_rhythmus_by_index(self, index):
         if index >= len(self.schicht_rhythmus):
@@ -67,6 +70,7 @@ class Employee:
         fruh_count = 0
         spat_count = 0
         nacht_count = 0
+        vacation_count = 0
 
         # Iterate through emp_shifts_dict to count shifts
         for week, shift in self.emp_shifts_dict.items():
@@ -76,11 +80,8 @@ class Employee:
                 spat_count += 1
             elif shift == SCHICHT_RHYTHMUS[3]:
                 nacht_count += 1
+            elif shift == "X":
+                vacation_count += 1
 
         # Return the counts
-        return {
-            SCHICHT_RHYTHMUS[1]: fruh_count,
-            SCHICHT_RHYTHMUS[2]: spat_count,
-            SCHICHT_RHYTHMUS[3]: nacht_count,
-            "gesamt": fruh_count + spat_count + nacht_count,
-        }
+        return {SCHICHT_RHYTHMUS[1]: fruh_count, SCHICHT_RHYTHMUS[2]: spat_count, SCHICHT_RHYTHMUS[3]: nacht_count, "Urlaub": vacation_count}

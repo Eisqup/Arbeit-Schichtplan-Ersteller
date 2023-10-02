@@ -1,246 +1,223 @@
+# Employee Creator GUI Application
+# Version: 1.02
+# Created by: Steven Stegink
+
 import tkinter as tk
 from tkinter import Label, Button, StringVar, Radiobutton, Checkbutton, ttk, messagebox, Entry
-import json
 import re
+import webbrowser
 
-from calender_creator import create_calender
 from constants import *
+
+from data_manager import DataManager
+from gui_edit_areas_dialog import EditAreas
+from gui_calender_input_dialog import CalendarInputDialog
 
 
 class GUIManager:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Employee Creator")
-        self.start_row = 1
         self.button_size = 16
-        self.data = {}
-        # Create an empty list to store selected "Rhythmus" options
-        self.selected_rhythmus_list = []
 
-        # Create a dictionary to hold the Checkbutton variables
-        self.selected_bereich_list = []
-        self.bereich_vars = []
+        self.data_manager = DataManager()
+        self.data = self.data_manager.data
+        self.settings_areas = self.data_manager.load_settings_areas()
 
-        self.load_data()
+        # Add a "Help" menu to your GUI's menu bar
+        menubar = tk.Menu(self.window)
+        self.window.config(menu=menubar)
+
+        # Create a "Help" menu item with an "About" option
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.show_about_info)
 
         # reader grid
         self.create_gui()
 
-        # Populate the list of employee names
-        self.load_employee_names_for_listbox()
+    def show_about_info(self):
+        def open_github(event):
+            webbrowser.open("https://github.com/Eisqup/Arbeit-Schichtplan-Ersteller")
 
-    def sort_data(self):
-        if "employees" in self.data:
-            # def custom_sort_key(employee):
-            #     name = employee[EMPLOYEE_KEY[0]]
-            #     # Split the name into a tuple of string and numeric parts
-            #     parts = re.split(r"(\d+)", name)
-            #     # Convert numeric parts to integers for sorting
-            #     numeric_parts = [int(part) if part.isdigit() else part for part in parts]
-            #     return numeric_parts
+        about_window = tk.Toplevel()
+        about_window.title("About Employee Creator")
+        about_label = tk.Label(about_window, text="Employee Calender Creator Application\nVersion: 1.02\nCreated by: Steven Stegink")
+        about_label.pack(padx=20, pady=20)
 
-            def custom_sort_key(employee):
-                return employee[EMPLOYEE_KEY[0]]
-
-            self.data["employees"] = sorted(self.data["employees"], key=custom_sort_key)
-
-    def load_data(self):
-        try:
-            with open(FILE_NAME, "r", encoding="utf-8") as file:
-                self.data = json.load(file)
-                self.sort_data()
-        except FileNotFoundError:
-            self.data = {"employees": []}
-
-            # Save the initial data to the file
-            with open(FILE_NAME, "w", encoding="utf-8") as file:
-                json.dump(self.data, file, indent=2)
-
-    def save_data_to_file(self):
-        # Save the updated data back to the file
-        with open(FILE_NAME, "w", encoding="utf-8") as file:
-            json.dump(self.data, file, indent=2)
+        # Create a link label
+        link_label = tk.Label(about_window, text="GitHub Repository", fg="blue", cursor="hand2")
+        link_label.pack()
+        link_label.bind("<Button-1>", open_github)
 
     def create_gui(self):
-        row = self.start_row
-        # Label for titles on the left and right
-        title_font = ("TkDefaultFont", 14, "bold underline")
-        title_justify = "center"
+        # Create a dictionary to hold the Checkbutton variables
+        self.selected_bereich_list = []
+        self.bereich_vars = []
+
+        # Create an empty list to store selected "Rhythmus" options
+        self.selected_rhythmus_list = []
 
         # Label for titles on the left and right
-        self.left_title_label = Label(
-            self.window, text="Mitarbeiter Erstellen/Bearbeiten", font=title_font, justify=title_justify
+        left_title_label = Label(
+            self.window, text="Mitarbeiter Erstellen/Bearbeiten", font=("TkDefaultFont", 14, "bold underline"), justify="center", pady="20px"
         )
-        self.left_title_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+        left_title_label.grid(row=0, column=0, sticky="w")
 
-        self.right_title_label = Label(
-            self.window, text="Vorhandene Mitarbeiter", font=title_font, justify=title_justify
-        )
-        self.right_title_label.grid(row=0, column=4, padx=10, pady=5, sticky="w")
+        right_title_label = Label(self.window, text="Vorhandene Mitarbeiter", font=("TkDefaultFont", 14, "bold underline"), justify="center")
+        right_title_label.grid(row=0, column=4, sticky="w")
 
-        row += 2
         # Label for entering the employee's name
-        self.name_label = Label(self.window, text="Enter Name:")
-        self.name_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+        name_label = Label(self.window, text="Enter Name:")
+        name_label.grid(row=1, column=0, sticky="w")
 
         self.name_entry = tk.Entry(self.window)
-        self.name_entry.grid(row=row, column=1, padx=10, pady=5)
-
-        row += 1
+        self.name_entry.grid(row=1, column=1)
 
         # Separator between sections
-        self.separator1 = ttk.Separator(self.window, orient="horizontal")
-        self.separator1.grid(row=row + 1, columnspan=3, sticky="ew", padx=10, pady=10)
-        row += 2
+        separator1 = ttk.Separator(self.window, orient="horizontal")
+        separator1.grid(row=2, columnspan=3, sticky="ew", pady=10)
 
         # Label for selecting shift model
-        self.shift_model_label = Label(self.window, text="Schicht Modell:")
-        self.shift_model_label.grid(row=row + 1, column=0, padx=10, pady=5, sticky="w")
+        shift_model_label = Label(self.window, text="Schicht Modell:")
+        shift_model_label.grid(row=3, column=0, sticky="w")
 
         # Radio buttons for selecting shift model
         self.shift_model_var = tk.IntVar()
         self.shift_model_var.set(1)  # Set an initial value to None
         for key, value in SCHICHT_MODELS.items():
             self.shift_model_radio = Radiobutton(self.window, text=value, variable=self.shift_model_var, value=key)
-            self.shift_model_radio.grid(row=row, column=1, padx=10, pady=5, sticky="w")
-            row += 1
+            self.shift_model_radio.grid(row=2 + key, column=1, sticky="w")
 
         # Separator between sections
-        self.separator1 = ttk.Separator(self.window, orient="horizontal")
-        self.separator1.grid(row=row + 1, columnspan=3, sticky="ew", padx=10, pady=10)
-        row += 2
+        separator1 = ttk.Separator(self.window, orient="horizontal")
+        separator1.grid(row=6, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for selecting Rhythmus
-        self.rhythmus_label = Label(self.window, text="Schicht Zyklus:\n (bei Individuell nach prio sortieren)")
-        self.rhythmus_label.grid(row=row + 1, column=0, padx=10, pady=5, sticky="w")
+        rhythmus_label = Label(self.window, text="Schicht Zyklus:\n (bei Individuell nach prio sortieren)")
+        rhythmus_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
 
         # Buttons for selecting Rhythmus
         self.rhythmus_options = list(SCHICHT_RHYTHMUS.values())
         self.selected_rhythmus_var = StringVar()
         self.selected_rhythmus_var.set(None)  # Set an initial value
-        for option in self.rhythmus_options:
+        for i, option in enumerate(self.rhythmus_options):
             self.rhythmus_button = Button(
                 self.window,
                 text=option,
                 width=self.button_size,
                 command=lambda o=option: self.add_to_selected_rhythmus(o),
             )
-            self.rhythmus_button.grid(row=row, column=1, padx=12, pady=5, sticky="w")
-            row += 1
+            self.rhythmus_button.grid(row=7 + i, column=1, sticky="w")
 
         # Label for displaying selected Rhythmus
-        self.selected_rhythmus_label = Label(self.window, text="Selected Rhythmus:")
-        self.selected_rhythmus_label.grid(row=row - 3, column=2, padx=10, pady=5, sticky="w")
+        selected_rhythmus_label = Label(self.window, text="Selected Rhythmus:")
+        selected_rhythmus_label.grid(row=7, column=2, padx=10, pady=5, sticky="w")
 
         self.selected_rhythmus_display = Label(self.window, text="")
-        self.selected_rhythmus_display.grid(row=row - 2, column=2, padx=10, pady=5, sticky="w")
+        self.selected_rhythmus_display.grid(row=8, column=2, padx=10, pady=5, sticky="w")
 
         # Clear button for Rhythmus
-        self.clear_rhythmus_button = Button(
+        clear_rhythmus_button = Button(
             self.window,
             text="RESET Zyklus",
             width=self.button_size,
             command=self.reset_selected_rhythmus_label,
         )
-        self.clear_rhythmus_button.grid(row=row - 1, column=2, padx=10, pady=5, sticky="w")
+        clear_rhythmus_button.grid(row=9, column=2, padx=10, pady=5, sticky="w")
 
         # Separator between sections
-        self.separator1 = ttk.Separator(self.window, orient="horizontal")
-        self.separator1.grid(row=row + 1, columnspan=3, sticky="ew", padx=10, pady=10)
-        row += 2
+        separator1 = ttk.Separator(self.window, orient="horizontal")
+        separator1.grid(row=10, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for selecting Bereich
-        self.bereich_label = Label(self.window, text="Mitarbeiter Fähigkeiten:")
-        self.bereich_label.grid(row=row + 2, column=0, padx=10, pady=5, sticky="w")
+        bereich_label = Label(self.window, text="Mitarbeiter Fähigkeiten:")
+        bereich_label.grid(row=11, column=0, padx=10, pady=5, sticky="w")
 
         # Checkbuttons for selecting Bereich
-        row += 1
-        for key, value in BEREICHE_EXCEL.items():
-            self.bereich_var = tk.BooleanVar()
-            self.bereich_vars.append(self.bereich_var)
-            self.bereich_checkbutton = Checkbutton(
-                self.window,
-                text=value,
-                variable=self.bereich_var,
-                command=lambda o=value: self.add_to_selected_bereich(o),
-            )
-            self.bereich_checkbutton.grid(row=row, column=1, padx=10, pady=5, sticky="w")
-            row += 1
+        # Create a new dictionary with items where 'min' is greater than 0
+        if not self.settings_areas:
+            no_bereich_label = Label(self.window, text="Keine Bereiche vorhanden")
+            no_bereich_label.grid(row=11, column=1, padx=10, pady=5, sticky="w")
+            add_len = 1
+        else:
+            filtered_data = {key: value for key, value in self.settings_areas.items() if value.get("min", 0) > 0}
+            add_len = len(filtered_data)
+            for i, (key, value) in enumerate(filtered_data.items()):
+                self.bereich_var = tk.BooleanVar()
+                self.bereich_vars.append(self.bereich_var)
+                self.bereich_checkbutton = Checkbutton(
+                    self.window,
+                    text=key,
+                    variable=self.bereich_var,
+                    command=lambda o=key: self.selected_bereich_list.append(o),
+                )
+                self.bereich_checkbutton.grid(row=11 + i, column=1, padx=10, pady=5, sticky="w")
+
+        # Create a button for "Bereich bearbeiten"
+        bereich_bearbeiten_button = tk.Button(
+            self.window, text="Bereiche bearbeiten", command=self.edit_areas  # Define a callback function for the button
+        )
+        bereich_bearbeiten_button.grid(row=11, column=2, sticky="w")
 
         # Separator between sections
-        self.separator1 = ttk.Separator(self.window, orient="horizontal")
-        self.separator1.grid(row=row + 1, columnspan=3, sticky="ew", padx=10, pady=10)
-        row += 2
+        separator1 = ttk.Separator(self.window, orient="horizontal")
+        separator1.grid(row=11 + add_len, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for entering urlaub_kw
-        self.urlaub_kw_label = Label(self.window, text="Enter Urlaub (KW) (sepertatet with space):")
-        self.urlaub_kw_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+        urlaub_kw_label = Label(self.window, text="Enter Urlaub (KW) (sepertatet with space):")
+        urlaub_kw_label.grid(row=12 + add_len, column=0, padx=10, pady=5, sticky="w")
 
         self.urlaub_kw_entry = tk.Entry(self.window)
-        self.urlaub_kw_entry.grid(row=row, column=1, padx=10, pady=5)
-
-        row += 1
+        self.urlaub_kw_entry.grid(row=12 + add_len, column=1, padx=10, pady=5)
 
         # Label for entering urlaub_day
-        self.urlaub_day_label = Label(
-            self.window, text="Enter Urlaub (Tage)(sepertatet with space):\nBespiel: DD.MM DD.MM"
-        )
-        self.urlaub_day_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
+        urlaub_day_label = Label(self.window, text="Enter Urlaub (Tage)(sepertatet with space):\nBespiel: DD.MM DD.MM")
+        urlaub_day_label.grid(row=13 + add_len, column=0, padx=10, pady=5, sticky="w")
 
         self.urlaub_day_entry = tk.Entry(self.window)
-        self.urlaub_day_entry.grid(row=row, column=1, padx=10, pady=5)
+        self.urlaub_day_entry.grid(row=13 + add_len, column=1, padx=10, pady=5)
 
         # Submit button
-        row += 1
-        self.submit_button = tk.Button(
-            self.window, text="Daten Speichern", width=self.button_size, command=self.save_employee_data
-        )
-        self.submit_button.grid(row=row, columnspan=2, pady=10)
+        submit_button = tk.Button(self.window, text="Daten Speichern", width=self.button_size, command=self.save_employee_data)
+        submit_button.grid(row=14 + add_len, columnspan=2, pady=10)
 
         # reset all
-        self.reset_button = tk.Button(
-            self.window, text="RESET ALL", width=self.button_size, command=self.reset_form_fields
-        )
-        self.reset_button.grid(row=row, column=1, columnspan=2, pady=10)
+        reset_button = tk.Button(self.window, text="RESET OVERLAY", width=self.button_size, command=self.reset_form_fields)
+        reset_button.grid(row=14 + add_len, column=1, columnspan=2, pady=10)
 
         # Vertical Separator in column 3
-        self.separator1_vertical = ttk.Separator(self.window, orient="vertical")
-        self.separator1_vertical.grid(row=0, column=3, rowspan=100, sticky="ns")
+        separator1_vertical = ttk.Separator(self.window, orient="vertical")
+        separator1_vertical.grid(row=0, column=3, rowspan=100, sticky="ns")
 
         # Listbox widget to display employee names
         self.employee_listbox = tk.Listbox(self.window, height=5, width=30)
-        self.employee_listbox.grid(row=self.start_row + 1, column=4, padx=10, pady=5, rowspan=row - 4, sticky="nsew")
+        self.employee_listbox.grid(row=1, column=4, rowspan=12, sticky="nsew")
 
         # Link employee
-        self.delete_button = tk.Button(
+        delete_button = tk.Button(
             self.window,
             text="Hinzufügen/Entfernen\nMitarbeiter link",
             width=self.button_size,
             command=self.link_employees_window,
         )
-        self.delete_button.grid(row=row - 2, column=3, columnspan=2, pady=10)
+        delete_button.grid(row=14, column=4, columnspan=2, sticky="w")
 
         # Delete button
-        self.delete_button = tk.Button(
-            self.window, text="Mitarbeiter löschen", width=self.button_size, command=self.delete_employee
-        )
-        self.delete_button.grid(row=row, column=3, columnspan=2, pady=10)
+        delete_button = tk.Button(self.window, text="Mitarbeiter löschen", width=self.button_size, command=self.delete_employee)
+        delete_button.grid(row=15, column=4, columnspan=2, sticky="w")
 
         # Create a Load button
-        self.load_button = tk.Button(
-            self.window, text="Daten Laden", width=self.button_size, command=self.load_selected_employee_to_GUI
-        )
-        self.load_button.grid(row=row - 1, column=4, padx=10, pady=5)
+        load_button = tk.Button(self.window, text="Daten Laden", width=self.button_size, command=self.load_selected_employee_to_GUI)
+        load_button.grid(row=16, column=4, columnspan=2, sticky="w")
 
         # Create a Shift plan button
-        self.load_button = tk.Button(
-            self.window, text="Erstelle Schichtplan", width=self.button_size, command=self.create_calender_button
-        )
-        self.load_button.grid(row=row + 1, column=4, padx=10, pady=5)
+        load_button = tk.Button(self.window, text="Erstelle Schichtplan", width=self.button_size, command=self.btn_create_calender)
+        load_button.grid(row=17, column=4, columnspan=2, sticky="w")
 
         # Create a frame to display the sneak peek
         self.sneak_peek_frame = tk.Frame(self.window)
-        self.sneak_peek_frame.grid(row=self.start_row + 1, column=5, padx=10, pady=5, rowspan=row - 3, sticky="nsew")
+        self.sneak_peek_frame.grid(row=1, column=6, rowspan=5, sticky="nsew")
 
         # Label to display selected employee's info in the sneak peek
         self.sneak_peek_info_label = Label(self.sneak_peek_frame, text="", justify="left")
@@ -249,14 +226,39 @@ class GUIManager:
         # Bind the Listbox selection event to update the sneak peek
         self.employee_listbox.bind("<<ListboxSelect>>", self.update_sneak_peek)
 
+        # Populate the list of employee names
+        self.load_employee_names_in_listbox()
+
     def save_employee_data(self):
+        # Function to split the input into a list
+        def split_and_check_input(input_str, is_weeks=False):
+            values = input_str.split()
+            if is_weeks:
+                # Validate weeks (1-52)
+                for value in values:
+                    try:
+                        week = int(value)
+                        if not (1 <= week <= 52):
+                            raise ValueError("Week must be between 1 and 52")
+                    except ValueError:
+                        messagebox.showerror("Error", f"Invalid week value: {value}. Weeks must be integers between 1 and 52.")
+                        return None  # Exit and handle the error
+
+            else:
+                # Validate dates (DD.MM)
+                date_pattern = re.compile(r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])$")
+                for value in values:
+                    if not date_pattern.match(value):
+                        messagebox.showerror("Error", f"Invalid date format: {value}. Dates must be in DD.MM format.")
+                        return None  # Exit and handle the error
+
+            return values
+
         name = self.name_entry.get()
         selected_shift_model = self.shift_model_var.get()
-        urlaub_kw = self.split_and_check_input(self.urlaub_kw_entry.get(), is_weeks=True)
-        urlaub_day = self.split_and_check_input(self.urlaub_day_entry.get())
-        self.selected_bereich_list = [
-            list(BEREICHE_EXCEL.values())[index] for index, var in enumerate(self.bereich_vars) if var.get()
-        ]
+        urlaub_kw = split_and_check_input(self.urlaub_kw_entry.get(), is_weeks=True)
+        urlaub_day = split_and_check_input(self.urlaub_day_entry.get())
+        self.selected_bereich_list = [list(self.settings_areas.keys())[index] for index, var in enumerate(self.bereich_vars) if var.get()]
 
         if urlaub_kw is None or urlaub_day is None:
             return
@@ -308,10 +310,10 @@ class GUIManager:
                     EMPLOYEE_KEY[5]: urlaub_day,
                 }
                 self.data["employees"].append(employee_data)
-                self.sort_data()
+                self.data = self.data_manager.sort_data(self.data)
 
             # Save the updated data back to the file
-            self.save_data_to_file()
+            self.data_manager.save_data(self.data)
 
             if not employee_exists:
                 message = "Mitarbeiter hinzugefügt:\n"
@@ -321,14 +323,18 @@ class GUIManager:
                 message = "Mitarbeiterdaten aktualisiert\n"
 
             print(message)
+            messagebox.showinfo(
+                "Info",
+                f"{message}",
+            )
 
         # Insert the newly created/updated employee's name into the Listbox
         self.employee_listbox.delete(0, tk.END)
-        self.load_employee_names_for_listbox()
+        self.load_employee_names_in_listbox()
 
         # Clear the form fields after creating or updating an employee
         self.reset_form_fields()
-        self.load_data()
+        self.data = self.data_manager.load_data()
 
     def update_sneak_peek(self, event):
         # Get the selected index from the listbox
@@ -342,7 +348,6 @@ class GUIManager:
                 info_text = "\n".join([f"{key}: {value}" for key, value in selected_employee.items()])
                 self.sneak_peek_info_label.config(text=info_text)
 
-    # Create a method to delete an employee
     def delete_employee(self):
         selected_index = self.employee_listbox.curselection()
         if selected_index:
@@ -359,7 +364,7 @@ class GUIManager:
                     deleted_employee = self.data["employees"].pop(selected_index)
 
                     # Save the updated data back to the file
-                    self.save_data_to_file
+                    self.data_manager.save_data(self.data)
 
                     # Clear the form fields
                     self.reset_form_fields()
@@ -388,7 +393,7 @@ class GUIManager:
                     var.set(False)
                 # Check the Bereich checkboxes based on the selected employee's data
                 for bereich in selected_employee[EMPLOYEE_KEY[3]]:
-                    index = list(BEREICHE_EXCEL.values()).index(bereich)
+                    index = list(self.settings_areas.keys()).index(bereich)
                     if 0 <= index < len(self.bereich_vars):
                         self.bereich_vars[index].set(True)
                 # Populate the Rhythmus buttons based on the selected employee's data
@@ -402,43 +407,25 @@ class GUIManager:
                 self.urlaub_day_entry.delete(0, tk.END)
                 self.urlaub_day_entry.insert(0, " ".join(selected_employee[EMPLOYEE_KEY[5]]))
 
-    # Add this method to populate the Listbox with employee names
-    def load_employee_names_for_listbox(self):
+    def load_employee_names_in_listbox(self):
         employee_names = []
         if "employees" in self.data:
             employee_names = [employee[EMPLOYEE_KEY[0]] for employee in self.data["employees"]]
         for name in employee_names:
             self.employee_listbox.insert(tk.END, name)
 
-    def add_to_selected_bereich(self, option):
-        self.selected_bereich_list.append(option)
+    def edit_areas(self):
+        def on_data_saved():
+            # This function will be called when data is successfully saved
+            edit_window.destroy()
+            self.settings_areas = self.data_manager.load_settings_areas()
+            for widget in self.window.grid_slaves():
+                widget.grid_forget()
+            self.create_gui()
 
-    # Function to split the input into a list
-    def split_and_check_input(self, input_str, is_weeks=False):
-        values = input_str.split()
-
-        if is_weeks:
-            # Validate weeks (1-52)
-            for value in values:
-                try:
-                    week = int(value)
-                    if not (1 <= week <= 52):
-                        raise ValueError("Week must be between 1 and 52")
-                except ValueError:
-                    messagebox.showerror(
-                        "Error", f"Invalid week value: {value}. Weeks must be integers between 1 and 52."
-                    )
-                    return None  # Exit and handle the error
-
-        else:
-            # Validate dates (DD.MM)
-            date_pattern = re.compile(r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])$")
-            for value in values:
-                if not date_pattern.match(value):
-                    messagebox.showerror("Error", f"Invalid date format: {value}. Dates must be in DD.MM format.")
-                    return None  # Exit and handle the error
-
-        return values
+        edit_window = tk.Toplevel(self.window)
+        edit_window.title("Bereich bearbeiten")
+        edit_areas = EditAreas(edit_window, areas=self.settings_areas, data_manager=self.data_manager, save_callback=on_data_saved)
 
     def reset_form_fields(self):
         self.name_entry.delete(0, tk.END)
@@ -455,69 +442,12 @@ class GUIManager:
 
     def add_to_selected_rhythmus(self, option):
         self.selected_rhythmus_list.append(option)
-        self.update_selected_rhythmus_label()
-
-    def update_selected_rhythmus_label(self):
         self.selected_rhythmus_display.config(text=", ".join(self.selected_rhythmus_list))
 
     # Reset list for "Rhythmus"
     def reset_selected_rhythmus_label(self):
         self.selected_rhythmus_display.config(text="")
         self.selected_rhythmus_list.clear()
-
-    def run(self):
-        self.window.mainloop()
-
-    def create_calender_button(self):
-        # Create a custom dialog to get all three values
-        dialog = tk.Toplevel(self.window)
-        dialog.title("Calendar Input")
-
-        year_label = Label(dialog, text="Kalender Jahr:")
-        year_label.pack()
-
-        year_entry = Entry(dialog)
-        year_entry.pack()
-        year_entry.insert(0, "2024")
-
-        start_week_label = Label(dialog, text="Start Arbeitswoche (1-52):")
-        start_week_label.pack()
-
-        start_week_entry = Entry(dialog)
-        start_week_entry.pack()
-        start_week_entry.insert(0, "1")
-
-        end_week_label = Label(dialog, text="Letzte Arbeitswoche (1-52):")
-        end_week_label.pack()
-
-        end_week_entry = Entry(dialog)
-        end_week_entry.pack()
-        end_week_entry.insert(0, "52")
-
-        # Function to handle the OK button click
-        def ok_clicked():
-            year = year_entry.get()
-            start_week = start_week_entry.get()
-            end_week = end_week_entry.get()
-
-            try:
-                year = int(year)
-                start_week = int(start_week)
-                end_week = int(end_week)
-
-                if 1 <= start_week <= 52 and 1 <= end_week <= 52:
-                    # Valid input, close the dialog and call create_calender
-                    dialog.destroy()
-                    create_calender(year, start_week, end_week)
-                else:
-                    messagebox.showerror("Invalid Input", "Please enter valid values.")
-            except ValueError:
-                messagebox.showerror("Invalid Input", "Please enter valid numeric values.")
-
-        ok_button = Button(dialog, text="OK", command=ok_clicked)
-        ok_button.pack()
-
-        dialog.mainloop()
 
     def link_employees_window(self):
         # Get the index of the selected employee in the main listbox
@@ -544,16 +474,18 @@ class GUIManager:
             linked_employee_name = selected_employee[EMPLOYEE_KEY[6]]
             for employee in self.data["employees"]:
                 if employee[EMPLOYEE_KEY[0]] == linked_employee_name:
-                    del employee[EMPLOYEE_KEY[6]]
-                    break  # Assuming there is only one link
-            del selected_employee[EMPLOYEE_KEY[6]]
+                    if EMPLOYEE_KEY[6] in employee:
+                        del employee[EMPLOYEE_KEY[6]]
+                        break  # Assuming there is only one link
+            if EMPLOYEE_KEY[6] in selected_employee:
+                del selected_employee[EMPLOYEE_KEY[6]]
 
             # Save the updated data back to the file
-            self.save_data_to_file()
+            self.data_manager.save_data(self.data)
 
             # Update the Listbox to reflect the change
             self.employee_listbox.delete(0, tk.END)
-            self.load_employee_names_for_listbox()
+            self.load_employee_names_in_listbox()
 
             # Show a confirmation message
             messagebox.showinfo(
@@ -566,9 +498,7 @@ class GUIManager:
             link_window.title("Link Employees")
 
             # Filter available employees excluding the selected one
-            available_employees = [
-                employee for index, employee in enumerate(self.data["employees"]) if index != selected_index
-            ]
+            available_employees = [employee for index, employee in enumerate(self.data["employees"]) if index != selected_index]
 
             # Filter available employees with the same rhythm and model
             matching_employees = [
@@ -613,11 +543,11 @@ class GUIManager:
                     selected_available_employee[EMPLOYEE_KEY[6]] = selected_employee[EMPLOYEE_KEY[0]]
 
                     # Save the updated data back to the file
-                    self.save_data_to_file()
+                    self.data_manager.save_data(self.data)
 
                     # Update the Listbox to reflect the change
                     self.employee_listbox.delete(0, tk.END)
-                    self.load_employee_names_for_listbox()
+                    self.load_employee_names_in_listbox()
 
                     # Close the link window
                     link_window.destroy()
@@ -630,6 +560,23 @@ class GUIManager:
 
             link_button = tk.Button(link_window, text="Link Mitarbeiter", command=link_selected_employees)
             link_button.pack()
+
+    def btn_create_calender(self):
+        # check if data there to run teh program
+        if not self.settings_areas:
+            messagebox.showerror("Missing Data", "Please insert areas and make sure employees have the areas as ability.")
+            return
+        # total_min_values = sum(value["min"] for value in self.settings_areas.values() if "min" in value)
+        total_min_values = 2
+        if len(self.data["employees"]) < total_min_values * 3:
+            messagebox.showerror("Missing Data", "Please insert more employees.")
+            return
+
+        # Create the calendar input dialog
+        calendar_dialog = CalendarInputDialog(self.window, self.settings_areas)
+
+    def run(self):
+        self.window.mainloop()
 
 
 if __name__ == "__main__":

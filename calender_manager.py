@@ -1,9 +1,14 @@
 import xlsxwriter
+import xlwings as xw
+import os
+import datetime
+import locale
+import time
+
 from constants import SETTINGS_VARIABLES, SCHICHT_RHYTHMUS
 from shiftPlanner_class import ShiftPlanner
 from get_holidays import get_holiday_dates
-import datetime
-import locale
+from vba import vba_code
 
 
 # Set the locale for German (Germany)
@@ -13,11 +18,12 @@ locale.setlocale(locale.LC_TIME, "de_DE.utf8")
 def find_max_employee_count(data, area_in, areas_setting, default_extra_rows):
     max_count = 0
 
-    for week_data in data.values():
-        for shift_data in week_data.values():
-            for area, area_data in shift_data.items():
-                if area == area_in:
-                    max_count = max(max_count, len(area_data))
+    if data:
+        for week_data in data.values():
+            for shift_data in week_data.values():
+                for area, area_data in shift_data.items():
+                    if area == area_in:
+                        max_count = max(max_count, len(area_data))
     if max_count == 0:
         max_count = 1
     if max_count < areas_setting[area_in]["max"]:
@@ -28,19 +34,22 @@ def find_max_employee_count(data, area_in, areas_setting, default_extra_rows):
 
 
 class CalendarCreator:
-    def __init__(self, year, start_week, end_week, program_runs, areas_setting, variable_settings):
+    def __init__(self, year, start_week, end_week, program_runs, areas_setting, variable_settings, excel_pw):
         self.year = year
         self.start_week = start_week
         self.end_week = end_week
         self.program_runs = program_runs
         self.areas_setting = areas_setting
         self.variable_settings = variable_settings
+        self.excel_sheets_pw = str(excel_pw)
 
         # Variablen
         self.cell_formatting = {}
         self.week_sheets = {}
-        self.file_name = f"Schichtplan_{self.year}.xlsx"
-        self.sheet_pw = "123"
+        self.all_sheets = []
+        self.timestamp = time.strftime("%Y%m%d%H%M%S")
+        self.file_name_xlsx = f"Schichtplan_{self.year}_{self.timestamp}.xlsx"
+        self.file_name_xlsm = f"Schichtplan_{self.year}_{self.timestamp}.xlsm"
         self.default_extra_rows_for_areas = 2
         self.day_col_width = 5
         self.area_and_name_col_width = 21
@@ -53,6 +62,7 @@ class CalendarCreator:
         # Colors
         self.school_holiday_color = "#FFFF99"
         self.date_color = "#D3D3D3"
+        self.count_ma_color = "#EAEAEA"
         self.ma_problem_color = "red"
         self.ma_ok_color = "green"
         na_color = "#FF6666"
@@ -81,10 +91,7 @@ class CalendarCreator:
 
         self.school_holiday, self.public_holidays = get_holiday_dates(self.year)
         self.shift_plan = self.create_shifts.get_shift_plan()
-        self.max_length_areas = {
-            area: find_max_employee_count(self.shift_plan, area, self.areas_setting, self.default_extra_rows_for_areas)
-            for area in self.areas_setting.keys()
-        }
+        self.max_length_areas = {area: find_max_employee_count(self.shift_plan, area, self.areas_setting, self.default_extra_rows_for_areas) for area in self.areas_setting.keys()}
         # Add a default value for an empty area name
         self.emp_list_length = len(self.create_shifts.employees) + self.default_extra_rows_for_areas * 2
         self.tabel_row_length = sum(self.max_length_areas.values()) + 1  # +1 for count emp
@@ -93,7 +100,10 @@ class CalendarCreator:
 
         # Calculate the maximum name length
         max_name_length_area_name = max(len(area) * 1.5 for area in self.max_length_areas.keys())
-        max_name_length_emp_name = max(len(emp.name) * 1.5 for emp in self.create_shifts.employees)
+        if self.create_shifts.employees:
+            max_name_length_emp_name = max(len(emp.name) * 1.5 for emp in self.create_shifts.employees)
+        else:
+            max_name_length_emp_name = 0
 
         # Calculate the column width based on the maximum name length
         self.text_col_width = max(self.area_and_name_col_width, max_name_length_area_name, max_name_length_emp_name)
@@ -113,24 +123,36 @@ class CalendarCreator:
             sheet.write(1, 2, sheet.name, self.create_format({"font_size": 18, "bold": True}))
 
         def add_emp_count(sheet, start_row, end_row, start_col):
-            border_format_big = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 1}
+            border_format_big = {
+                "left": 2,
+                "right": 2,
+                "top": 2,
+                "bottom": 2,
+                "hidden": 1,
+                "locked": 1,
+                "bold": True,
+                "bg_color": self.count_ma_color,
+            }
             # create emp count row
-            border_format = {"top": 2, "left": 1, "right": 1, "bottom": 2, "font_size": 13, "hidden": 1, "locked": 1}
+            border_format = {"top": 2, "left": 1, "right": 1, "bottom": 2, "font_size": 13, "hidden": 1, "locked": 1, "bg_color": self.count_ma_color}
             col = start_col + 1
             row = end_row
-            for runs in SCHICHT_RHYTHMUS.values():
-                sheet.write(row, col, "Anzahl MA", self.create_format(border_format_big))
+            for i, runs in enumerate(SCHICHT_RHYTHMUS.values()):
+                if i == 0:
+                    sheet.write(row, col, "Anzahl MA", self.create_format(border_format_big, self.font_text))
+                else:
+                    sheet.write(row, col, "", self.create_format(border_format_big, self.font_text))
                 excel_range_1 = xlsxwriter.utility.xl_range(start_row + 2, col, row - 1, col)
                 col += 1
                 for day in range(self.week_length):
                     excel_range_2 = xlsxwriter.utility.xl_range(start_row + 2, col + day, row - 1, col + day)
                     count_formula = f'SUMPRODUCT(({excel_range_1}<>"")*({excel_range_2}=""))'
                     if day == 0:
-                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format, {"left": 2}))
+                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format, {"left": 2}, self.font_text))
                     elif day == self.week_length - 1:
-                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format, {"right": 2}))
+                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format, {"right": 2}, self.font_text))
                     else:
-                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format))
+                        sheet.write_array_formula(row, col + day, row, col + day, count_formula, self.create_format(border_format, self.font_text))
                 col += self.week_length
 
         def add_areas_tabel(sheet, start_row, start_col):
@@ -143,12 +165,12 @@ class CalendarCreator:
             sheet.set_row(row + 1, 20)
             row += 2
             for area, length in self.max_length_areas.items():
-                if area == "-b":
+                if area.startswith("-b"):
                     area = ""
                 if length == 1:
-                    sheet.write(row, col, area, self.create_format(border_format_big_lock, self.font_text))
+                    sheet.write(row, col, area, self.create_format(border_format_big_lock, self.font_text, {"bold": True}))
                 else:
-                    sheet.merge_range(row, col, row + length - 1, col, area, self.create_format(border_format_big_lock, self.font_text))
+                    sheet.merge_range(row, col, row + length - 1, col, area, self.create_format(border_format_big_lock, self.font_text, {"bold": True}))
                 row += length
 
         def add_tabel(sheet, start_row, start_col, start_date_of_the_week, week):
@@ -167,9 +189,7 @@ class CalendarCreator:
                 # width
                 sheet.set_column(col, col, self.text_col_width)
                 # Header
-                sheet.merge_range(
-                    row, col, row + 1, col, f"{runs}schicht", self.create_format(border_format_big_lock, self.font_text, {"bold": True})
-                )
+                sheet.merge_range(row, col, row + 1, col, f"{runs}schicht", self.create_format(border_format_big_lock, self.font_text, {"bold": True}))
                 row += 2
                 for area, length in self.max_length_areas.items():
                     format_ = self.create_format(border_format_names, {"top": 2, "bottom": 1})
@@ -188,13 +208,17 @@ class CalendarCreator:
                 x = xlsxwriter.utility.xl_range(start_row + 2, col, row - 1, col)
                 sheet.conditional_format(
                     x,
-                    {"type": "formula", "criteria": f'=IF(AND({x[:2]}<>"", COUNTIF({tabel_range}, {x[:2]}) > 1), 1, 0)', "format": cell_format},
+                    {
+                        "type": "formula",
+                        "criteria": f'=IF(AND({x[:2]}<>"",{x[:2]}<>"Anzahl MA", COUNTIF({tabel_range}, {x[:2]}) > 1), 1, 0)',
+                        "format": cell_format,
+                    },
                 )
                 sheet.conditional_format(
                     x,
                     {
                         "type": "formula",
-                        "criteria": f'=AND({x[:2]}<>"", COUNTIF({ma_list_range}, {x[:2]}) =0)',
+                        "criteria": f'=AND({x[:2]}<>"",{x[:2]}<>"Anzahl MA", COUNTIF({ma_list_range}, {x[:2]}) =0)',
                         "format": cell_format,
                     },
                 )
@@ -319,12 +343,7 @@ class CalendarCreator:
                     x,
                     {"type": "formula", "criteria": formula, "format": cell_format_g},
                 )
-                formula = (
-                    f'=AND({first_group}<>"", OR('
-                    f"COUNTIF({tabel_range}, {first_group}) <> 1, "
-                    f"COUNTIF({ma_list_range}, {first_group}) <> 1"
-                    f"))"
-                )
+                formula = f'=AND({first_group}<>"", OR(' f"COUNTIF({tabel_range}, {first_group}) <> 1, " f"COUNTIF({ma_list_range}, {first_group}) <> 1" f"))"
                 sheet.conditional_format(
                     x,
                     {"type": "formula", "criteria": formula, "format": cell_format_r},
@@ -376,38 +395,28 @@ class CalendarCreator:
 
         for week, week_sheet in self.week_sheets.items():
             # Berechne den Starttag der Woche
-            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(
-                days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday()
-            )
+            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday())
 
-            self.sheet_protection = {
-                "objects": False,
-                "scenarios": False,
-                "format_cells": False,
-                "format_columns": False,
-                "format_rows": False,
-                "insert_columns": False,
-                "insert_rows": False,
-                "insert_hyperlinks": False,
-                "delete_columns": False,
-                "delete_rows": False,
-                "select_locked_cells": False,
-                "sort": False,
-                "autofilter": False,
-                "pivot_tables": False,
-                "select_unlocked_cells": True,
-            }
-
-            week_sheet.protect(
-                self.sheet_pw,
-                self.sheet_protection,
-            )
             week_sheet.set_row(0, 6)
             week_sheet.set_column(0, 0, 1)
             add_header(week_sheet)
             add_areas_tabel(week_sheet, start_row=row, start_col=col)
             add_tabel(week_sheet, start_row=row, start_col=col, start_date_of_the_week=start_date_of_the_week, week=week)
-            add_emp_count(week_sheet, start_row=row, end_row=row + self.tabel_row_length + 1, start_col=col)
+
+            ##### Creating breaks #####
+            if any(key.startswith("-b") for key in self.areas_setting.keys()):
+                count_up = 0
+                start_r = row
+                for key, length in self.max_length_areas.items():
+                    count_up += length
+                    if key.startswith("-b"):
+                        add_emp_count(week_sheet, start_row=start_r, end_row=start_r + count_up + 1, start_col=col)
+                        start_r += count_up
+                        count_up = 0
+                add_emp_count(week_sheet, start_row=start_r, end_row=start_r + count_up + 1 + 1, start_col=col)
+            else:
+                add_emp_count(week_sheet, start_row=row, end_row=row + self.tabel_row_length + 1, start_col=col)
+
             add_away_list(week_sheet, start_row=row, start_col=col, week=week)
             add_emp_list(week_sheet, start_row=row, start_col=col, week=week)
             add_legend(week_sheet, start_row=row, start_col=col)
@@ -416,6 +425,7 @@ class CalendarCreator:
         for week in range(1, 52 + 1):
             week_sheet = self.workbook.add_worksheet(f"KW{week}")
             self.week_sheets[week] = week_sheet
+            self.all_sheets.append(week_sheet)
 
     def insert_emp_to_weeks(self):
         for week, week_shift in self.shift_plan.items():
@@ -459,33 +469,43 @@ class CalendarCreator:
                     row += 1
 
     def insert_public_holidays_and_weekend(self):
+        ## Check for br
+        result_row_postion_list = []
+        row_postion = self.start_row + 2
+        for key, value in self.max_length_areas.items():
+            row_postion += value
+            if key.startswith("-b"):
+                result_row_postion_list.append(row_postion - 1)
+
         for week, sheet in self.week_sheets.items():
-            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(
-                days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday()
-            )
+            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday())
             col = self.start_col + 2
             for runs in SCHICHT_RHYTHMUS.values():
                 for day in range(self.week_length):
                     row = self.start_row + 2
+
                     date_of_the_week = start_date_of_the_week + datetime.timedelta(days=day)
                     if date_of_the_week.strftime("%d.%m") in self.public_holidays or date_of_the_week.weekday() in [5, 6]:
                         for row in range(row, row + self.tabel_row_length - 1):
-                            sheet.write(row, col, "X", self.cell_formatting[f"{week}-{row}-{col}"])
+                            if row not in result_row_postion_list:
+                                sheet.write(row, col, "X", self.cell_formatting[f"{week}-{row}-{col}"])
                     col += 1
                 col += 1
 
     def create_area_statistic_sheet(self):
         sheet = self.workbook.add_worksheet("Bereichs Informationen")
         col = self.start_col + 1
-        sheet.protect(self.sheet_pw, self.sheet_protection)
-        sheet.freeze_panes(3, 0)
+        self.all_sheets.append(sheet)
+        sheet.freeze_panes(3, 3)
         sheet.set_row(0, 6)
         sheet.set_column(0, 0, 1)
+        sheet.set_column("A:A", None, None, {"hidden": 1})
         border_format_big_lock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 1, "font_size": 16}
         row_size = 20
 
         # Create Range Dict to create formals later
         area_range_dict = {}
+        keys_to_remove = []
         for shift in SCHICHT_RHYTHMUS.values():
             row = 4
             for area, length in self.max_length_areas.items():
@@ -495,13 +515,24 @@ class CalendarCreator:
 
             col += self.week_length + 1
 
+        dict_for_sheet = {}
+        for key, item in self.areas_setting.items():
+            if item["min"] != 0 or key.startswith("-b"):
+                dict_for_sheet[key] = self.max_length_areas[key]
+
+        for key in reversed(list(dict_for_sheet.keys())):
+            if key.startswith("-b"):
+                del dict_for_sheet[key]
+            else:
+                break
+
         row = 1
-        col = 2
+        col = 1
         sheet.merge_range(
             row,
             col,
             row,
-            col + 2 + len(self.max_length_areas.keys()),
+            col + 2 + len(dict_for_sheet.keys()),
             "Bereichs Informationen",
             self.create_format(border_format_big_lock, {"font_size": 15, "bold": True}),
         )
@@ -518,18 +549,22 @@ class CalendarCreator:
         sheet.set_column(col, col, self.text_col_width)
         col += 1
         sheet.set_column(col, col, row_size)
-        for area in self.max_length_areas.keys():
-            sheet.write(row, col, area, self.create_format(border_format_big_lock, {"bold": True}))
-            sheet.set_column(col, col, self.text_col_width)
+        for area in dict_for_sheet.keys():
+            if area.startswith("-b"):
+                sheet.write(row, col, "Gesamt", self.create_format(border_format_big_lock, {"bold": True}))
+                sheet.set_column(col, col, 10)
+            else:
+                sheet.write(row, col, area, self.create_format(border_format_big_lock, {"bold": True}))
+                sheet.set_column(col, col, self.text_col_width)
             col += 1
         sheet.write(row, col, "Gesamt", self.create_format(border_format_big_lock, {"bold": True}))
-        sheet.set_column(col, col, self.text_col_width)
+        sheet.set_column(col, col, 10)
         col += 1
 
         row += 1
 
         def create_border(row, col):
-            start_col = 2
+            start_col = 1
             start_row = 3
 
             if row == start_row or (row - start_row) % (len(SCHICHT_RHYTHMUS)) == 0:
@@ -547,7 +582,7 @@ class CalendarCreator:
             else:
                 left = 1
 
-            if col == start_col + 2 + len(self.max_length_areas.keys()):
+            if col == start_col + 2 + len(dict_for_sheet.keys()):
                 right = 2
             else:
                 right = 1
@@ -562,90 +597,110 @@ class CalendarCreator:
 
         for week in range(1, 53):
             for shift in SCHICHT_RHYTHMUS.values():
-                col = 2
+                start_col = 3
+                end_col = start_col - 1
+                col = 1
                 sheet.set_row(row, row_size)
                 sheet.write(row, col, week, self.create_format(border_format_big_lock, create_border(row, col)))
                 col += 1
                 sheet.write(row, col, f"{shift}schicht", self.create_format(border_format_big_lock, create_border(row, col)))
                 col += 1
-                range_gesamt = xlsxwriter.utility.xl_range(row, col, row, col - 1 + len(self.max_length_areas.keys()))
-                cor_gesamt = xlsxwriter.utility.xl_range(row, col + len(self.max_length_areas.keys()), row, col + len(self.max_length_areas.keys()))
-                for area in self.max_length_areas.keys():
-                    min_value = self.areas_setting[area]["min"]
-                    max_value = self.areas_setting[area]["max"]
-                    cor_area = xlsxwriter.utility.xl_range(row, col, row, col)
 
-                    sheet.write(
-                        row,
-                        col,
-                        f'=COUNTA(KW{week}!{area_range_dict[f"{shift}-{area}"]})',
-                        self.create_format(border_format_big_lock, create_border(row, col)),
-                    )
-                    if min_value > 0:
-                        sheet.conditional_format(
-                            cor_area,
-                            {
-                                "type": "formula",
-                                "criteria": f"AND({cor_area}>={min_value}, {cor_area}<{max_value}, {cor_gesamt}>0)",
-                                "format": yellow_format,
-                            },
+                # Find count coordinate
+                postion_dict = {}
+                found_areas = []
+                for i, area in enumerate(dict_for_sheet.keys()):
+                    if area.startswith("-b"):
+                        found_areas.append(area)
+                        for area2 in found_areas:
+                            cor_gesamt = xlsxwriter.utility.xl_range(row, col + i, row, col + i)
+                            postion_dict[area2] = cor_gesamt
+                        found_areas = []
+                    else:
+                        found_areas.append(area)
+
+                    if len(postion_dict) + len(found_areas) == len(dict_for_sheet.keys()):
+                        for area2 in found_areas:
+                            cor_gesamt = xlsxwriter.utility.xl_range(row, col + i + 1, row, col + i + 1)
+                            postion_dict[area2] = cor_gesamt
+
+                for area in dict_for_sheet.keys():
+                    cor_gesamt = postion_dict[area]
+                    end_col += 1
+                    range_gesamt = xlsxwriter.utility.xl_range(row, start_col, row, end_col - 1)
+                    if area.startswith("-b"):
+                        sheet.write(
+                            row,
+                            col,
+                            f"=SUM({range_gesamt})",
+                            self.create_format(border_format_big_lock, {"bg_color": self.count_ma_color}, create_border(row, col)),
                         )
-                        sheet.conditional_format(
-                            cor_area,
-                            {
-                                "type": "formula",
-                                "criteria": f"AND({cor_area}>{max_value}, {cor_gesamt}>0)",
-                                "format": dark_green_format,
-                            },
+                        start_col += col - start_col + 1
+                    else:
+                        min_value = self.areas_setting[area]["min"]
+                        max_value = self.areas_setting[area]["max"]
+                        cor_area = xlsxwriter.utility.xl_range(row, col, row, col)
+
+                        sheet.write(
+                            row,
+                            col,
+                            f'=COUNTA(KW{week}!{area_range_dict[f"{shift}-{area}"]})',
+                            self.create_format(border_format_big_lock, create_border(row, col)),
                         )
-                        sheet.conditional_format(
-                            cor_area,
-                            {
-                                "type": "formula",
-                                "criteria": f"AND({cor_area}={max_value}, {cor_gesamt}>0)",
-                                "format": green_format,
-                            },
-                        )
-                        sheet.conditional_format(
-                            cor_area,
-                            {
-                                "type": "formula",
-                                "criteria": f"AND({cor_area}<{min_value}, {cor_gesamt}>0)",
-                                "format": red_format,
-                            },
-                        )
+                        if min_value > 0:
+                            sheet.conditional_format(
+                                cor_area,
+                                {
+                                    "type": "formula",
+                                    "criteria": f"AND({cor_area}>={min_value}, {cor_area}<{max_value}, {cor_gesamt}>0)",
+                                    "format": yellow_format,
+                                },
+                            )
+                            sheet.conditional_format(
+                                cor_area,
+                                {
+                                    "type": "formula",
+                                    "criteria": f"AND({cor_area}>{max_value}, {cor_gesamt}>0)",
+                                    "format": dark_green_format,
+                                },
+                            )
+                            sheet.conditional_format(
+                                cor_area,
+                                {
+                                    "type": "formula",
+                                    "criteria": f"AND({cor_area}={max_value}, {cor_gesamt}>0)",
+                                    "format": green_format,
+                                },
+                            )
+                            sheet.conditional_format(
+                                cor_area,
+                                {
+                                    "type": "formula",
+                                    "criteria": f"AND({cor_area}<{min_value}, {cor_gesamt}>0)",
+                                    "format": red_format,
+                                },
+                            )
 
                     col += 1
-                sheet.write(row, col, f"=SUM({range_gesamt})", self.create_format(border_format_big_lock, create_border(row, col)))
+                range_gesamt = xlsxwriter.utility.xl_range(row, start_col, row, end_col)
+                sheet.write(
+                    row,
+                    col,
+                    f"=SUM({range_gesamt})",
+                    self.create_format(border_format_big_lock, {"bg_color": self.count_ma_color}, create_border(row, col)),
+                )
                 col += 1
                 row += 1
 
     def create_employee_statistic_sheet(self):
-        sheet = self.workbook.add_worksheet("MA Informationen")
+        ma_information_sheet = "MA Informationen"
+        sheet = self.workbook.add_worksheet(ma_information_sheet)
         col = self.start_col + 1
-        sheet.protect(
-            self.sheet_pw,
-            {
-                "objects": False,
-                "scenarios": False,
-                "format_cells": False,
-                "format_columns": False,
-                "format_rows": False,
-                "insert_columns": False,
-                "insert_rows": False,
-                "insert_hyperlinks": False,
-                "delete_columns": False,
-                "delete_rows": False,
-                "select_locked_cells": False,
-                "sort": True,  # Allow sorting within the table.
-                "autofilter": True,  # Allow applying autofilter within the table.
-                "pivot_tables": False,
-                "select_unlocked_cells": True,
-            },
-        )
+        self.all_sheets.append(sheet)
         sheet.freeze_panes(3, 0)
         sheet.set_row(0, 6)
         sheet.set_column(0, 0, 1)
+        sheet.set_column("B:B", None, None, {"hidden": 1})
         border_format_big_lock = self.create_format(
             {
                 "left": 2,
@@ -728,6 +783,7 @@ class CalendarCreator:
                             "right": 2,
                             "top": 2,
                             "bottom": 2,
+                            "font_size": 14,
                             "hidden": 1,
                             "locked": 0,
                         }
@@ -785,9 +841,193 @@ class CalendarCreator:
         sheet.add_table(table_range, {"name": "MAInfo", "columns": [{"header": name} for name in column_names]})
         sheet.unprotect_range(table_range)
 
+    def add_protection(self):
+        protect = {
+            "objects": False,
+            "scenarios": False,
+            "format_cells": False,
+            "format_columns": False,
+            "format_rows": False,
+            "insert_columns": False,
+            "insert_rows": False,
+            "insert_hyperlinks": False,
+            "delete_columns": False,
+            "delete_rows": False,
+            "select_locked_cells": False,
+            "sort": True,  # Allow sorting within the table.
+            "autofilter": True,  # Allow applying autofilter within the table.
+            "pivot_tables": False,
+            "select_unlocked_cells": True,
+        }
+        for sheet in self.all_sheets:
+            sheet.protect(self.excel_sheets_pw, protect)
+
+    def create_error_sheet(self):
+        def find_sentences_with_word(sentences, search_word):
+            found_sentences = [sentence for sentence in sentences if search_word in sentence]
+            return found_sentences
+
+        format_2 = self.create_format({"left": 1, "right": 1, "top": 1, "bottom": 1, "hidden": 1, "locked": 0, "font_size": 13})
+        format_1 = self.create_format({"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 0, "font_size": 13})
+
+        sheet = self.workbook.add_worksheet("Fehler Meldungen")
+        # self.all_sheets.append(sheet)
+
+        all_errors = self.create_shifts.error_areas + self.create_shifts.error_shift
+
+        list_area_with_understaffed_emp = find_sentences_with_word(all_errors, "Überprüfen: Bereich unterbesetzt.")
+        list_model_2_emp_moved_from_shift = find_sentences_with_word(all_errors, "vom Modell 2 eingetragen.")
+        list_missing_quali_for_area = find_sentences_with_word(all_errors, "fehlt die Quali fürs")
+        list_shifts_area_not_even = find_sentences_with_word(all_errors, "Info: Schichten sind nicht ausgeglichen.")
+        list_area_has_more_then_max_emp = find_sentences_with_word(all_errors, " hat mehr als")
+
+        col = 2
+        row = 2
+        col_size = 80
+
+        if list_area_with_understaffed_emp:
+            sheet.set_column(col, col, col_size)
+            row += 1
+            for massage in list_area_with_understaffed_emp:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Bereich unterbesetzt", format_1)
+            col += 1
+
+        if list_model_2_emp_moved_from_shift:
+            sheet.set_column(col, col, col_size * 2)
+            row += 1
+            for massage in list_model_2_emp_moved_from_shift:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Mitarbeiter mit Model 2 verschoben", format_1)
+            col += 1
+        if list_missing_quali_for_area:
+            sheet.set_column(col, col, col_size + 40)
+            row += 1
+            for massage in list_missing_quali_for_area:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Mitarbeiter fehlt die Qualifizierung", format_1)
+            col += 1
+        if list_shifts_area_not_even:
+            sheet.set_column(col, col, col_size)
+            row += 1
+            for massage in list_shifts_area_not_even:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Schichten sind nicht ausgeglichen besetzt", format_1)
+            col += 1
+        if list_area_has_more_then_max_emp:
+            sheet.set_column(col, col, col_size)
+            row += 1
+            for massage in list_area_has_more_then_max_emp:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Bereich hat mehr als die maximale Anzahl an Mitarbeiter", format_1)
+            col += 1
+
+    def add_log(self):
+        sheet = self.workbook.add_worksheet("Log")
+        self.all_sheets.append(sheet)
+
+    def delete_xlsx_file(self):
+        try:
+            xlsx_file_path = os.path.abspath(self.file_name_xlsx)
+            # Check if the XLSM file already exists
+            if os.path.exists(xlsx_file_path):
+                time.sleep(2)
+                os.remove(xlsx_file_path)
+                time.sleep(1)
+        except Exception as rename_error:
+            print(f"Error renaming existing XLSX file: {str(rename_error)}")
+
+    def delete_xlsm_file(self):
+        try:
+            file = self.file_name_xlsm.replace(f"_{self.timestamp}", "")
+            xlsm_file_path = os.path.abspath(file)
+            # Check if the XLSM file already exists
+            if os.path.exists(xlsm_file_path):
+                # Rename the existing file with a timestamp
+                timestamp = time.strftime("%Y%m%d%H%M%S")
+                new_xlsm_file_path = xlsm_file_path.replace(".xlsm", f"_{timestamp}_OLD.xlsm")
+                os.rename(xlsm_file_path, new_xlsm_file_path)
+                time.sleep(2)
+                os.remove(new_xlsm_file_path)
+                time.sleep(1)
+        except Exception as err:
+            print(f"Error renaming existing XLSM file: {str(err)}")
+
+    def change_workbook_type_and_add_vba(self):
+        # Specify the paths for XLSX and XLSM files
+        xlsx_file_path = self.file_name_xlsx
+        xlsm_file_path = self.file_name_xlsm
+        self.delete_xlsm_file()
+
+        xlsm_file_path = os.path.abspath(xlsm_file_path)
+        vba_code_new = vba_code
+        vba_code_new = vba_code_new.format(self.excel_sheets_pw)
+        try:
+            # Initialize Excel application
+            app = None
+            try:
+                app = xw.App(visible=False)
+            except Exception as e:
+                print(f"Open App fails: {str(e)}")
+
+            # Check if Excel application is initialized
+            if app:
+                wb = None
+                try:
+                    # Open the XLSX file with xlwings
+                    wb = app.books.open(xlsx_file_path)
+
+                    try:
+                        wb.api.VBProject.VBComponents("ThisWorkbook").CodeModule.AddFromString(vba_code_new)
+                    except Exception as e:
+                        print(
+                            f"Cant add Macro: {str(e)}\nExcel macros are not trusted. "
+                            "To enable macros, please check Microsoft's documentation: "
+                            "https://support.microsoft.com/en-us/office/enable-or-disable-macros-in-microsoft-365-files-12b036fd-d140-4e74-b45e-16fed1a7e5c6"
+                        )
+
+                    # Save it as XLSM with error handling for savSe
+                    try:
+                        wb.save(xlsm_file_path)
+                    except Exception as e:
+                        print(f"An error occurred while saving the XLSM file: {str(e)}")
+                        # Create a manual VBA file
+                        manual_vba_file_path = "manual_macro.vba"
+                        with open(manual_vba_file_path, "w") as vba_file:
+                            vba_file.write(vba_code_new)
+                        print(f"VBA code saved to '{manual_vba_file_path}' for manual import and enable macros.")
+
+                except Exception as e:
+                    print(f"An error occurred while converting XLSX to XLSM and adding Macro: {str(e)}")
+                finally:
+                    # Close workbook
+                    if wb:
+                        wb.close()
+
+                    try:
+                        new_xlsm_file_path = xlsm_file_path.replace(f"_{self.timestamp}", "")
+                        os.rename(xlsm_file_path, new_xlsm_file_path)
+                    except Exception as e:
+                        print(f"Error by rename the XLSM File: {e}")
+
+                # Quit Excel application
+                app.quit()
+        except Exception as e:
+            print(f"An error occurred: {str(e)}")
+
     def run(self):
         print("Creating Excel file...")
-        self.workbook = xlsxwriter.Workbook(self.file_name, {"author": self.author})
+        self.workbook = xlsxwriter.Workbook(self.file_name_xlsx)
         self.create_sheets_for_weeks()
         self.create_week_sheet_overlay()
         self.insert_emp_to_weeks()
@@ -796,21 +1036,40 @@ class CalendarCreator:
         self.insert_public_holidays_and_weekend()
         self.create_area_statistic_sheet()
         self.create_employee_statistic_sheet()
+        self.create_error_sheet()
+        self.workbook.set_properties({"author": self.author})
+        self.add_log()
+        self.add_protection()
         self.workbook.close()
-        print("Done")
+        print("Add Macro to Excel...")
+        self.change_workbook_type_and_add_vba()
+        self.delete_xlsx_file()
+        time.sleep(2)
+        print(f"Schichtplan {self.year} erstellt.")
 
 
 if __name__ == "__main__":
     CalendarCreator(
-        year=2023,
+        year=2024,
         start_week=2,
         end_week=50,
         program_runs=10,
         areas_setting={
-            "FFK": {"prio": 5, "min": 0, "max": 1},
+            "FFK": {"prio": 199, "min": 0, "max": 1},
             "Drehen": {"prio": 1, "min": 3, "max": 3, "fill": True},
             "Bohren": {"prio": 3, "min": 2, "max": 3},
-            "Fräsen": {"prio": 2, "min": 3, "max": 3},
+            "Fr\u00e4sen": {"prio": 2, "min": 3, "max": 3},
+            "Platzhalter": {"prio": 1111, "min": 0, "max": 3},
+            "-b1": {"prio": 1000, "min": 0, "max": 0},
+            "B&O": {"prio": 42, "min": 1, "max": 1},
+            "\u00d6VH": {"prio": 32, "min": 1, "max": 1},
+            "Modul 2": {"prio": 122, "min": 1, "max": 2},
+            "Comau": {"prio": 22, "min": 1, "max": 1},
+            "Modul 3": {"prio": 52, "min": 2, "max": 3},
+            "Dienstleister": {"prio": 622, "min": 0, "max": 3},
+            "-b2": {"prio": 8888, "min": 0, "max": 0},
+            "B\u00fcro": {"prio": 123123, "min": 0, "max": 4},
         },
         variable_settings=SETTINGS_VARIABLES,
+        excel_pw="123",
     )

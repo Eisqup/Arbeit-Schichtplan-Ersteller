@@ -2,16 +2,16 @@ from constants import *
 
 
 class Employee:
-    def __init__(self, name, schicht_model, schicht_rhythmus=[], bereiche=[], urlaub_kw=[], urlaub_tage=[], link=None):
+    def __init__(self, name, schicht_model, schicht_rhythmus=[], bereiche=[], urlaub_kw=[], link=None, start_kw_model_2=None):
         self.name = name  # "name": "Employee1"
         self.schicht_model = schicht_model  # "schicht_model": "individuelle Schicht"
         self.schicht_rhythmus = schicht_rhythmus  # "schicht_rhythmus": "Früh, Spät, Nacht"
 
         self.bereiche = bereiche  # "bereiche": "Drehen, Bohren"
         self.urlaub_kw = [int(kw) for kw in urlaub_kw]  # "urlaub_kw": [2, 8, 14]
-        self.urlaub_tage = urlaub_tage  # "urlaub_tage": ["10.01", "12.02"]
 
         self.link = link  # add here a buddy if he want to work with someone most time together
+        self.start_kw_model_2 = start_kw_model_2
 
         self.start_shift_index_num = None
         self.counter_start_shift = 0
@@ -20,18 +20,18 @@ class Employee:
         self.employee_list = []
         self.model_2_count_for_shift_switch = 0
 
-    def set_start_shift(self, list_for_last_rhythmus_in_model_2):
-        if self.start_shift_index_num:
-            return self.schicht_rhythmus[self.start_shift_index_num]
-        for rhythmus in self.schicht_rhythmus:
-            if rhythmus not in list_for_last_rhythmus_in_model_2:
-                self.start_shift_index_num = self.schicht_rhythmus.index(rhythmus)
-                return rhythmus
-
-        for rhythmus in reversed(list_for_last_rhythmus_in_model_2):
-            if rhythmus in self.schicht_rhythmus:
-                self.start_shift_index_num = self.schicht_rhythmus.index(rhythmus)
-                return rhythmus
+    def set_start_shift(self, model_2_start_shift_kw_1_dict):
+        # Find lowest values
+        lowest_values = sorted(model_2_start_shift_kw_1_dict.values())
+        for run in range(len(model_2_start_shift_kw_1_dict) - 1):
+            lowest_keys = [key for key, value in model_2_start_shift_kw_1_dict.items() if value == lowest_values[run]]
+            if any(lowest_key in self.schicht_rhythmus for lowest_key in lowest_keys):
+                # Find the index of the first lowest key in self.schicht_rhythmus
+                index = next(i for i, key in enumerate(self.schicht_rhythmus) if key in lowest_keys)
+                self.start_shift_index_num = index
+                return self.schicht_rhythmus[index]
+        self.start_shift_index_num = 0
+        return self.schicht_rhythmus[0]
 
     def get_shift_from_model_2(self, week):
         if self.start_shift_index_num is not None:

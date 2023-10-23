@@ -1,9 +1,9 @@
 # Employee Creator GUI Application
-# Version: 1.02
+# Version: 1.1
 # Created by: Steven Stegink
 
 import tkinter as tk
-from tkinter import Label, Button, StringVar, Radiobutton, Checkbutton, ttk, messagebox, Entry
+from tkinter import Label, Button, StringVar, Radiobutton, Checkbutton, ttk, messagebox, Entry, Frame
 import re
 import webbrowser
 
@@ -18,7 +18,7 @@ class GUIManager:
     def __init__(self):
         self.window = tk.Tk()
         self.window.title("Employee Creator")
-        self.button_size = 16
+        self.button_size = 20
 
         self.data_manager = DataManager()
         self.data = self.data_manager.data
@@ -31,10 +31,18 @@ class GUIManager:
         # Create a "Help" menu item with an "About" option
         help_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="Informationen", command=self.show_program_infos)
         help_menu.add_command(label="About", command=self.show_about_info)
 
         # reader grid
         self.create_gui()
+        self.show_program_infos()
+
+    def show_program_infos(self):
+        messagebox.showinfo(
+            "Programm Informationen",
+            PROGRAMM_INFOS,
+        )
 
     def show_about_info(self):
         def open_github(event):
@@ -42,7 +50,7 @@ class GUIManager:
 
         about_window = tk.Toplevel()
         about_window.title("About Employee Creator")
-        about_label = tk.Label(about_window, text="Employee Calender Creator Application\nVersion: 1.02\nCreated by: Steven Stegink")
+        about_label = tk.Label(about_window, text="Employee Calender Creator Application\nVersion: 1.1\nCreated by: Steven Stegink")
         about_label.pack(padx=20, pady=20)
 
         # Create a link label
@@ -59,16 +67,14 @@ class GUIManager:
         self.selected_rhythmus_list = []
 
         # Label for titles on the left and right
-        left_title_label = Label(
-            self.window, text="Mitarbeiter Erstellen/Bearbeiten", font=("TkDefaultFont", 14, "bold underline"), justify="center", pady="20px"
-        )
+        left_title_label = Label(self.window, text="Mitarbeiter Erstellen/Bearbeiten", font=("TkDefaultFont", 14, "bold underline"), justify="center", pady="20px")
         left_title_label.grid(row=0, column=0, sticky="w")
 
         right_title_label = Label(self.window, text="Vorhandene Mitarbeiter", font=("TkDefaultFont", 14, "bold underline"), justify="center")
         right_title_label.grid(row=0, column=4, sticky="w")
 
         # Label for entering the employee's name
-        name_label = Label(self.window, text="Enter Name:")
+        name_label = Label(self.window, text="Mitarbeiter Name:")
         name_label.grid(row=1, column=0, sticky="w")
 
         self.name_entry = tk.Entry(self.window)
@@ -88,14 +94,27 @@ class GUIManager:
         for key, value in SCHICHT_MODELS.items():
             self.shift_model_radio = Radiobutton(self.window, text=value, variable=self.shift_model_var, value=key)
             self.shift_model_radio.grid(row=2 + key, column=1, sticky="w")
+            if key == 2:
+                # Bind the function to the second radio button
+                self.shift_model_radio.bind("<ButtonRelease-1>", lambda event, i=key: self.on_model_2_radio_selected())
+            else:
+                # Bind the function to the first and third radio buttons
+                self.shift_model_radio.bind("<ButtonRelease-1>", lambda event, i=key: self.on_other_model_radio_selected())
+        for i, item in enumerate(SCHICHT_MODELS_BESCHREIBUNG):
+            i += 1
+            shift_description = Label(self.window, text=item)
+            shift_description.grid(row=2 + i, column=2, sticky="w")
 
         # Separator between sections
         separator1 = ttk.Separator(self.window, orient="horizontal")
         separator1.grid(row=6, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for selecting Rhythmus
-        rhythmus_label = Label(self.window, text="Schicht Zyklus:\n (bei Individuell nach prio sortieren)")
-        rhythmus_label.grid(row=7, column=0, padx=10, pady=5, sticky="w")
+        rhythmus_label = Label(self.window, text="Schicht Rhythmus:")
+        rhythmus_label.grid(row=7, column=0, padx=10, sticky="nw")
+
+        # Create a frame to contain the buttons
+        rhythmus_frame = Frame(self.window)
 
         # Buttons for selecting Rhythmus
         self.rhythmus_options = list(SCHICHT_RHYTHMUS.values())
@@ -103,42 +122,51 @@ class GUIManager:
         self.selected_rhythmus_var.set(None)  # Set an initial value
         for i, option in enumerate(self.rhythmus_options):
             self.rhythmus_button = Button(
-                self.window,
+                rhythmus_frame,
                 text=option,
                 width=self.button_size,
                 command=lambda o=option: self.add_to_selected_rhythmus(o),
             )
-            self.rhythmus_button.grid(row=7 + i, column=1, sticky="w")
+            self.rhythmus_button.grid(row=i, column=0, sticky="w", pady=5)
 
-        # Label for displaying selected Rhythmus
-        selected_rhythmus_label = Label(self.window, text="Selected Rhythmus:")
-        selected_rhythmus_label.grid(row=7, column=2, padx=10, pady=5, sticky="w")
+        rhythmus_frame.grid(row=7, rowspan=len(SCHICHT_RHYTHMUS), column=1)
 
-        self.selected_rhythmus_display = Label(self.window, text="")
-        self.selected_rhythmus_display.grid(row=8, column=2, padx=10, pady=5, sticky="w")
+        # Frame für die beiden Labels
+        label_frame = Frame(self.window)
+        label_frame.grid(row=7, column=2, padx=10, pady=5, sticky="w", rowspan=3)
+
+        # Label für "Ausgewählter Rhythmus" im Frame
+        selected_rhythmus_label = Label(label_frame, text="Ausgewählter Rhythmus:")
+        selected_rhythmus_label.pack(side="top", anchor="nw")
+
+        # Label für die Anzeige des ausgewählten Rhythmus im Frame
+        self.selected_rhythmus_display = Label(label_frame, text="")
+        self.selected_rhythmus_display.pack(side="top", pady=10)
 
         # Clear button for Rhythmus
         clear_rhythmus_button = Button(
-            self.window,
+            label_frame,
             text="RESET Zyklus",
             width=self.button_size,
             command=self.reset_selected_rhythmus_label,
         )
-        clear_rhythmus_button.grid(row=9, column=2, padx=10, pady=5, sticky="w")
+        clear_rhythmus_button.pack(side="bottom", anchor="sw")
 
         # Separator between sections
         separator1 = ttk.Separator(self.window, orient="horizontal")
         separator1.grid(row=10, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for selecting Bereich
-        bereich_label = Label(self.window, text="Mitarbeiter Fähigkeiten:")
+        bereich_label = Label(self.window, text="Mitarbeiter Bereichsfähigkeiten:")
         bereich_label.grid(row=11, column=0, padx=10, pady=5, sticky="w")
 
+        # Create a frame to contain the Checkbuttons
+        bereich_frame = Frame(self.window)
+
         # Checkbuttons for selecting Bereich
-        # Create a new dictionary with items where 'min' is greater than 0
         if not self.settings_areas:
-            no_bereich_label = Label(self.window, text="Keine Bereiche vorhanden")
-            no_bereich_label.grid(row=11, column=1, padx=10, pady=5, sticky="w")
+            no_bereich_label = Label(bereich_frame, text="Keine Bereiche vorhanden")
+            no_bereich_label.grid(row=0, column=0, padx=10, pady=5, sticky="w")
             add_len = 1
         else:
             filtered_data = {key: value for key, value in self.settings_areas.items() if value.get("min", 0) > 0}
@@ -147,17 +175,18 @@ class GUIManager:
                 self.bereich_var = tk.BooleanVar()
                 self.bereich_vars.append(self.bereich_var)
                 self.bereich_checkbutton = Checkbutton(
-                    self.window,
+                    bereich_frame,
                     text=key,
                     variable=self.bereich_var,
                     command=lambda o=key: self.selected_bereich_list.append(o),
                 )
-                self.bereich_checkbutton.grid(row=11 + i, column=1, padx=10, pady=5, sticky="w")
+                self.bereich_checkbutton.grid(row=i, column=0, padx=10, pady=5, sticky="w")
+
+        # Place the frame in the main window with the specified grid settings
+        bereich_frame.grid(row=11, rowspan=add_len, column=1)
 
         # Create a button for "Bereich bearbeiten"
-        bereich_bearbeiten_button = tk.Button(
-            self.window, text="Bereiche bearbeiten", command=self.edit_areas  # Define a callback function for the button
-        )
+        bereich_bearbeiten_button = tk.Button(self.window, text="Bereiche bearbeiten", command=self.edit_areas)  # Define a callback function for the button
         bereich_bearbeiten_button.grid(row=11, column=2, sticky="w")
 
         # Separator between sections
@@ -165,18 +194,18 @@ class GUIManager:
         separator1.grid(row=11 + add_len, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for entering urlaub_kw
-        urlaub_kw_label = Label(self.window, text="Enter Urlaub (KW) (sepertatet with space):")
+        urlaub_kw_label = Label(self.window, text="Mitarbeiter Urlaub in KW (sepertatet with space):")
         urlaub_kw_label.grid(row=12 + add_len, column=0, padx=10, pady=5, sticky="w")
 
         self.urlaub_kw_entry = tk.Entry(self.window)
         self.urlaub_kw_entry.grid(row=12 + add_len, column=1, padx=10, pady=5)
 
-        # Label for entering urlaub_day
-        urlaub_day_label = Label(self.window, text="Enter Urlaub (Tage)(sepertatet with space):\nBespiel: DD.MM DD.MM")
-        urlaub_day_label.grid(row=13 + add_len, column=0, padx=10, pady=5, sticky="w")
+        # # Label for entering urlaub_day
+        # urlaub_day_label = Label(self.window, text="Enter Urlaub (Tage)(sepertatet with space):\nBespiel: DD.MM DD.MM")
+        # urlaub_day_label.grid(row=13 + add_len, column=0, padx=10, pady=5, sticky="w")
 
-        self.urlaub_day_entry = tk.Entry(self.window)
-        self.urlaub_day_entry.grid(row=13 + add_len, column=1, padx=10, pady=5)
+        # self.urlaub_day_entry = tk.Entry(self.window)
+        # self.urlaub_day_entry.grid(row=13 + add_len, column=1, padx=10, pady=5)
 
         # Submit button
         submit_button = tk.Button(self.window, text="Daten Speichern", width=self.button_size, command=self.save_employee_data)
@@ -208,7 +237,7 @@ class GUIManager:
         delete_button.grid(row=15, column=4, columnspan=2, sticky="w")
 
         # Create a Load button
-        load_button = tk.Button(self.window, text="Daten Laden", width=self.button_size, command=self.load_selected_employee_to_GUI)
+        load_button = tk.Button(self.window, text="Mitarbeiter Daten Laden", width=self.button_size, command=self.load_selected_employee_to_GUI)
         load_button.grid(row=16, column=4, columnspan=2, sticky="w")
 
         # Create a Shift plan button
@@ -228,6 +257,40 @@ class GUIManager:
 
         # Populate the list of employee names
         self.load_employee_names_in_listbox()
+
+    def on_model_2_radio_selected(self, default_value_for_radiobutton="default"):
+        if hasattr(self, "radiobutton_frame"):
+            self.radiobutton_frame.destroy()
+
+        # Create a frame for Checkbuttons
+        self.radiobutton_frame = Frame(self.window)
+
+        label_only_model_2 = Label(
+            self.radiobutton_frame,
+            text="\nBestimme in welcher Woche\nder ausgewählte Rhythmus startet.\n(Default=Automatisch via Algorithmus)",
+            justify="left",
+        )
+        label_only_model_2.pack(side="top", anchor="w")
+
+        # Create a variable to track the selected option
+        self.selected_option_start_kw_model2 = tk.StringVar()
+        self.selected_option_start_kw_model2.set(default_value_for_radiobutton)  # Set an initial value
+
+        # Create the radio buttons
+        default_radio = Radiobutton(self.radiobutton_frame, text="Default", variable=self.selected_option_start_kw_model2, value="default")
+        kw1_start_radio = Radiobutton(self.radiobutton_frame, text="KW1", variable=self.selected_option_start_kw_model2, value="kw1_start")
+        arbeitswoche_start_radio = Radiobutton(self.radiobutton_frame, text="Arbeitswoche start", variable=self.selected_option_start_kw_model2, value="arbeitswoche_start")
+
+        default_radio.pack(side="left", padx=5)
+        kw1_start_radio.pack(side="left", padx=5)
+        arbeitswoche_start_radio.pack(side="left", padx=5)
+
+        self.radiobutton_frame.grid(row=8, column=0)
+
+    def on_other_model_radio_selected(self):
+        # Delete the checkbutton frame if it exists
+        if hasattr(self, "radiobutton_frame"):
+            self.radiobutton_frame.destroy()
 
     def save_employee_data(self):
         # Function to split the input into a list
@@ -257,10 +320,13 @@ class GUIManager:
         name = self.name_entry.get()
         selected_shift_model = self.shift_model_var.get()
         urlaub_kw = split_and_check_input(self.urlaub_kw_entry.get(), is_weeks=True)
-        urlaub_day = split_and_check_input(self.urlaub_day_entry.get())
-        self.selected_bereich_list = [list(self.settings_areas.keys())[index] for index, var in enumerate(self.bereich_vars) if var.get()]
+        # urlaub_day = split_and_check_input(self.urlaub_day_entry.get())
 
-        if urlaub_kw is None or urlaub_day is None:
+        filtered_data = [key for key, value in self.settings_areas.items() if value.get("min", 0) > 0]
+        self.selected_bereich_list = [filtered_data[index] for index, var in enumerate(self.bereich_vars) if var.get()]
+
+        # if urlaub_kw is None or urlaub_day is None:
+        if urlaub_kw is None:
             return
 
         # Check if required fields are empty
@@ -282,33 +348,35 @@ class GUIManager:
             for employee in self.data.get("employees", []):
                 if employee.get(EMPLOYEE_KEY[0]) == name:
                     employee_exists = True
+                    emp = employee
                     break
 
+            employee_data = {
+                EMPLOYEE_KEY[0]: name,
+                EMPLOYEE_KEY[1]: SCHICHT_MODELS[selected_shift_model],
+                EMPLOYEE_KEY[2]: self.selected_rhythmus_list,
+                EMPLOYEE_KEY[3]: self.selected_bereich_list,
+                EMPLOYEE_KEY[4]: urlaub_kw,
+                # EMPLOYEE_KEY[5]: urlaub_day,
+            }
+
+            if SCHICHT_MODELS[selected_shift_model] == SCHICHT_MODELS[2]:
+                model_2_checkbutton_start_kw = self.selected_option_start_kw_model2.get()
+                employee_data["start_kw_model_2"] = model_2_checkbutton_start_kw
+
             if employee_exists:
+                if "link" in emp:
+                    employee_data["link"] = emp["link"]
+
                 result = messagebox.askquestion("Confirm", "Mitarbeiter schon vorhanden. Daten überschreiben?")
                 if result == "yes":
                     # Overwrite the existing employee's data
                     for index, employee in enumerate(self.data.get("employees", [])):
                         if employee.get(EMPLOYEE_KEY[0]) == name:
-                            # Remove unchecked "Bereich" abilities from the list
-                            self.data["employees"][index] = {
-                                EMPLOYEE_KEY[0]: name,
-                                EMPLOYEE_KEY[1]: SCHICHT_MODELS[selected_shift_model],
-                                EMPLOYEE_KEY[2]: self.selected_rhythmus_list,
-                                EMPLOYEE_KEY[3]: self.selected_bereich_list,
-                                EMPLOYEE_KEY[4]: urlaub_kw,
-                                EMPLOYEE_KEY[5]: urlaub_day,
-                            }
+                            self.data["employees"][index] = {}
+                            # Add the new employee data
+                            self.data["employees"][index].update(employee_data)
             else:
-                # Create the employee data dictionary
-                employee_data = {
-                    EMPLOYEE_KEY[0]: name,
-                    EMPLOYEE_KEY[1]: SCHICHT_MODELS[selected_shift_model],
-                    EMPLOYEE_KEY[2]: self.selected_rhythmus_list,
-                    EMPLOYEE_KEY[3]: self.selected_bereich_list,
-                    EMPLOYEE_KEY[4]: urlaub_kw,
-                    EMPLOYEE_KEY[5]: urlaub_day,
-                }
                 self.data["employees"].append(employee_data)
                 self.data = self.data_manager.sort_data(self.data)
 
@@ -393,7 +461,9 @@ class GUIManager:
                     var.set(False)
                 # Check the Bereich checkboxes based on the selected employee's data
                 for bereich in selected_employee[EMPLOYEE_KEY[3]]:
-                    index = list(self.settings_areas.keys()).index(bereich)
+                    filtered_data = [key for key, value in self.settings_areas.items() if value.get("min", 0) > 0]
+                    index = filtered_data.index(bereich)
+                    # index = list(self.settings_areas.keys()).index(bereich)
                     if 0 <= index < len(self.bereich_vars):
                         self.bereich_vars[index].set(True)
                 # Populate the Rhythmus buttons based on the selected employee's data
@@ -404,8 +474,16 @@ class GUIManager:
                 # Populate the Urlaub fields
                 self.urlaub_kw_entry.delete(0, tk.END)
                 self.urlaub_kw_entry.insert(0, " ".join(map(str, selected_employee[EMPLOYEE_KEY[4]])))
-                self.urlaub_day_entry.delete(0, tk.END)
-                self.urlaub_day_entry.insert(0, " ".join(selected_employee[EMPLOYEE_KEY[5]]))
+                # self.urlaub_day_entry.delete(0, tk.END)
+                # self.urlaub_day_entry.insert(0, " ".join(selected_employee[EMPLOYEE_KEY[5]]))
+
+                if shift_model == SCHICHT_MODELS[2]:
+                    if "start_kw_model_2" in selected_employee:
+                        self.on_model_2_radio_selected(selected_employee["start_kw_model_2"])
+                    else:
+                        self.on_model_2_radio_selected()
+                else:
+                    self.on_other_model_radio_selected()
 
     def load_employee_names_in_listbox(self):
         employee_names = []
@@ -432,13 +510,14 @@ class GUIManager:
         self.shift_model_var.set(1)
         self.reset_selected_rhythmus_label()
         self.selected_bereich_list.clear()
+        self.on_other_model_radio_selected()
 
         # Uncheck all checkboxes
         for var in self.bereich_vars:
             var.set(False)
 
         self.urlaub_kw_entry.delete(0, tk.END)
-        self.urlaub_day_entry.delete(0, tk.END)
+        # self.urlaub_day_entry.delete(0, tk.END)
 
     def add_to_selected_rhythmus(self, option):
         self.selected_rhythmus_list.append(option)
@@ -501,14 +580,7 @@ class GUIManager:
             available_employees = [employee for index, employee in enumerate(self.data["employees"]) if index != selected_index]
 
             # Filter available employees with the same rhythm and model
-            matching_employees = [
-                employee
-                for employee in available_employees
-                if (
-                    employee[EMPLOYEE_KEY[1]] == selected_employee[EMPLOYEE_KEY[1]]
-                    and set(employee[EMPLOYEE_KEY[2]]) == set(selected_employee[EMPLOYEE_KEY[2]])
-                )
-            ]
+            matching_employees = [employee for employee in available_employees if (employee[EMPLOYEE_KEY[1]] == selected_employee[EMPLOYEE_KEY[1]] and set(employee[EMPLOYEE_KEY[2]]) == set(selected_employee[EMPLOYEE_KEY[2]]))]
 
             if not matching_employees:
                 messagebox.showerror("Error", "Kein Mitarbeiter mit demselben Rhythmus und Modell verfügbar.")
@@ -566,11 +638,9 @@ class GUIManager:
         if not self.settings_areas:
             messagebox.showerror("Missing Data", "Please insert areas and make sure employees have the areas as ability.")
             return
-        # total_min_values = sum(value["min"] for value in self.settings_areas.values() if "min" in value)
-        total_min_values = 2
-        if len(self.data["employees"]) < total_min_values * 3:
-            messagebox.showerror("Missing Data", "Please insert more employees.")
-            return
+
+        if len(self.data["employees"]) == 0:
+            print("Erstelle nur Excel Datei.")
 
         # Create the calendar input dialog
         calendar_dialog = CalendarInputDialog(self.window, self.settings_areas)

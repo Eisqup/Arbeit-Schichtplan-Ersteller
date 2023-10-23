@@ -1,8 +1,10 @@
 import tkinter as tk
+import textwrap
 from tkinter import Label, Entry, Button, messagebox, Checkbutton
+
+
 from constants import *
 from calender_manager import CalendarCreator
-import textwrap
 
 MAX_LINE_LENGTH = 85
 
@@ -57,6 +59,13 @@ class CalendarInputDialog:
         self.program_run_entry.pack()
         self.program_run_entry.insert(0, str(PROGRAM_RUNS))
 
+        excel_pw_label = Label(insert_frame, text="Excel-Seiten-Passwort Festlegen")
+        excel_pw_label.pack()
+
+        self.excel_pw_entry = Entry(insert_frame)
+        self.excel_pw_entry.pack()
+        self.excel_pw_entry.insert(0, str(EXCEL_SHEET_PW))
+
         ok_button = Button(insert_frame, text="Erstelle Kalender", command=self.ok_clicked, justify="center")
         ok_button.pack(pady=20)
 
@@ -104,6 +113,7 @@ class CalendarInputDialog:
         start_week = self.start_week_entry.get()
         end_week = self.end_week_entry.get()
         program_run = self.program_run_entry.get()
+        excel_pw = self.excel_pw_entry.get()
 
         for variable_name, var in self.settings_entry.items():
             value = var.get()
@@ -125,14 +135,20 @@ class CalendarInputDialog:
             start_week = int(start_week)
             end_week = int(end_week)
             program_run = int(program_run)
+            excel_pw = int(excel_pw)
 
             if 1 <= start_week <= 52 and 1 <= end_week <= 52:
                 # Valid input, close the dialog and call create_calendar
                 if self.a_window is not None:
                     self.a_window.destroy()
                 self.dialog.destroy()
-                CalendarCreator(year, start_week, end_week, program_run, self.settings_areas, self.variable_settings)
+
+                CalendarCreator(year, start_week, end_week, program_run, self.settings_areas, self.variable_settings, excel_pw)
+
+                # Display a message box after CalendarCreator is done
+                messagebox.showinfo("Info", "Schichtplan erstellt")
+
             else:
                 messagebox.showerror("Invalid Input", "Please enter valid values or check areas.")
         except ValueError:
-            messagebox.showerror("Invalid Input", "Please enter valid numeric values.")
+            messagebox.showerror("Invalid Input", "Schichtplan konnte nicht erstellt werden.")

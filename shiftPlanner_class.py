@@ -20,20 +20,11 @@ class ShiftPlanner:
         self.areas = areas
         self.settings = variable_settings
 
-        self.shuffled_order_history = []
-
         # Program
         self.run(program_run)
         self.update_employees_with_best_plan()
 
     def load_employees(self):
-        def is_previous_shuffling(current_order):
-            # Check if the current_order matches any order in the history
-            for order in self.shuffled_order_history:
-                if current_order == order:
-                    return True
-            return False
-
         try:
             with open(FILE_NAME, "r", encoding="utf-8") as file:
                 data = json.load(file)
@@ -62,76 +53,51 @@ class ShiftPlanner:
 
         count = 0
 
-        # while loop to make sure the list i always difference
-        while is_previous_shuffling(employees_data):
-            random.shuffle(employees_data)
-            count += 1
-            if count == program_run:
-                print("Emp list is the same " + program_run + " times")
-                break
-
-        self.shuffled_order_history.append(employees_data.copy())
-
-        # Create the employees classes
-        list_of_last_shift_in_model_2 = []
-
         for employee_data in employees_data:
-            # Check if EMPLOYEE_KEY[6] exists in employee_data
-            additional_data = employee_data.get(EMPLOYEE_KEY[6], None)
-
-            employee = Employee(
-                employee_data[EMPLOYEE_KEY[0]],
-                employee_data[EMPLOYEE_KEY[1]],
-                employee_data[EMPLOYEE_KEY[2]],
-                employee_data[EMPLOYEE_KEY[3]],
-                employee_data[EMPLOYEE_KEY[4]],
-                employee_data[EMPLOYEE_KEY[5]],
-                additional_data,
+            emp = Employee(
+                name=employee_data.get("name"),
+                schicht_model=employee_data.get("schicht_model"),
+                schicht_rhythmus=employee_data.get("schicht_rhythmus"),
+                bereiche=employee_data.get("bereiche"),
+                urlaub_kw=employee_data.get("urlaub_kw"),
+                link=employee_data.get("link"),
+                start_kw_model_2=employee_data.get("start_kw_model_2"),
             )
 
             # add placeholder to emp dict for the program
             if self.start_week > 1:
                 for i in range(1, self.start_week):
-                    employee.add_shift(i, "no work")
+                    emp.add_shift(i, "no work")
             if self.end_week < 52:
                 for i in range(self.end_week, 53):
-                    employee.add_shift(i, "no work")
+                    emp.add_shift(i, "no work")
 
             # Add emp to the list
-            employees.append(employee)
+            employees.append(emp)
+
+        model_2_start_shift_kw_1_dict = {value: 0 for value in SCHICHT_RHYTHMUS.values()}
+
+        random.shuffle(employees)
 
         for emp in employees:
             # set the start shift for the emp with the schichtmodel 2
-            if emp.schicht_model == SCHICHT_MODELS[2]:
-                if SETTINGS_VARIABLES["IGNORE_MODEL_2_START_WEEK_LOGIC"]:
+            if emp.schicht_model == SCHICHT_MODELS[2] and emp.start_shift_index_num == None:
+                if SETTINGS_VARIABLES["IGNORE_MODEL_2_START_WEEK_LOGIC"] or emp.start_kw_model_2 == "kw1_start":
                     emp.start_shift_index_num = 0
-                    if emp.link:
-                        # Find link employee with the same name in the list
-                        matching_employee = None
-                        for other_emp in employees:
-                            if other_emp.name == emp.link:
-                                matching_employee = other_emp
-                                break
-                        if matching_employee:
-                            matching_employee.start_shift_index_num = 0
-
+                    model_2_start_shift_kw_1_dict[emp.schicht_rhythmus[0]] += 1
+                elif emp.start_kw_model_2 == "arbeitswoche_start":
+                    index = (len(emp.schicht_rhythmus) - ((self.start_week - 1) % len(emp.schicht_rhythmus))) % len(emp.schicht_rhythmus)
+                    emp.start_shift_index_num = index
+                    model_2_start_shift_kw_1_dict[emp.schicht_rhythmus[index]] += 1
                 else:
-                    result = emp.set_start_shift(list_of_last_shift_in_model_2)
-                    if result in list_of_last_shift_in_model_2:
-                        list_of_last_shift_in_model_2.remove(result)
-                    list_of_last_shift_in_model_2.insert(0, result)
+                    shift = emp.set_start_shift(model_2_start_shift_kw_1_dict)
+                    model_2_start_shift_kw_1_dict[shift] += 1
 
-                    if emp.link:
-                        # Find link employee with the same name in the list
-                        matching_employee = None
-                        for other_emp in employees:
-                            if other_emp.name == emp.link:
-                                matching_employee = other_emp
-                                break
-
-                        if matching_employee:
-                            if matching_employee.link == emp.name:
-                                matching_employee.start_shift_index_num = emp.start_shift_index_num
+                if emp.link:
+                    for emp_link in employees:
+                        if emp.link == emp_link.name and emp_link.start_shift_index_num == None:
+                            emp_link.start_shift_index_num = emp.start_shift_index_num
+                            model_2_start_shift_kw_1_dict[emp_link.schicht_rhythmus[emp_link.start_shift_index_num]] += 1
 
         return employees
 
@@ -162,11 +128,7 @@ class ShiftPlanner:
             for employee in shift_with_emp:
                 for assigned_area, employees_list in areas.items():
                     for employee_to_switch in employees_list:
-                        if (
-                            area_needed in employee_to_switch.bereiche
-                            and employee_to_switch not in areas[area_needed]
-                            and assigned_area in employee.bereiche
-                        ):
+                        if area_needed in employee_to_switch.bereiche and employee_to_switch not in areas[area_needed] and assigned_area in employee.bereiche:
                             shift_with_emp.remove(employee)
                             areas[assigned_area].remove(employee_to_switch)
 
@@ -181,6 +143,8 @@ class ShiftPlanner:
         areas = {value: [] for value in self.areas.keys()}
 
         shift_with_emp = [employee for employee in shift_with_emp if employee != "No employee found"]
+
+        random.shuffle(shift_with_emp)
 
         # Add employee with just one area to work
         remove_list = []
@@ -215,9 +179,7 @@ class ShiftPlanner:
                 max_missing_employees = max(self.areas[area][min_or_max] - len(areas[area]) for area in self.areas.keys())
 
                 # Find the areas with the same maximum missing employees
-                areas_with_max_missing = [
-                    area for area in self.areas.keys() if self.areas[area][min_or_max] - len(areas[area]) == max_missing_employees
-                ]
+                areas_with_max_missing = [area for area in self.areas.keys() if self.areas[area][min_or_max] - len(areas[area]) == max_missing_employees]
 
                 # Find the area with the lowest priority among areas with the lowest number of employees
                 area = min(
@@ -226,18 +188,18 @@ class ShiftPlanner:
                 )
 
             # -----------------------------------------------------------------------------------------------------------
-            continue_loop = False
-            for length in range(2, len(areas.keys()) + 1):
-                filtered_employees = [employee for employee in shift_with_emp if len(employee.bereiche) == length and area in employee.bereiche]
-                if filtered_employees:
-                    selected_employee = random.choice(filtered_employees)
-                    areas[area].append(selected_employee)
-                    shift_with_emp.remove(selected_employee)
-                    continue_loop = True
-                    break
-
-            if continue_loop:
+            # continue_loop = False
+            # for length in range(2, len(areas.keys()) + 1):
+            filtered_employees = [employee for employee in shift_with_emp if area in employee.bereiche]
+            if filtered_employees:
+                selected_employee = random.choice(filtered_employees)
+                areas[area].append(selected_employee)
+                shift_with_emp.remove(selected_employee)
+                # continue_loop = True
                 continue
+
+            # if continue_loop:
+            #     continue
 
             # if the available emp don´t have the ability for the area check the other areas if we can change one
             result = find_employees_with_area_ability(shift_with_emp, areas, area)
@@ -272,9 +234,7 @@ class ShiftPlanner:
                                     area_ran = select_emp[1]
                                 # if no one to change is founded hard error and send emp to fill area
                                 else:
-                                    self.error_areas.append(
-                                        f"Überprüfen: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt trotz fehlender Quali"
-                                    )
+                                    self.error_areas.append(f"Überprüfen: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt trotz fehlender Quali")
 
                 areas[area_ran].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
@@ -285,9 +245,7 @@ class ShiftPlanner:
 
                 # Check if the length of all areas is less than or equal to 3
                 if all(len(areas[area]) <= self.areas[area]["min"] for area in self.areas.keys()):
-                    self.error_areas_small.append(
-                        f"Info: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt"
-                    )
+                    self.error_areas_small.append(f"Info: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt")
 
         # Check if the length of emp is less of the min value an create a error
         for area_key in self.areas.keys():
@@ -305,11 +263,7 @@ class ShiftPlanner:
                 for emp in available_employees:
                     if emp.name == selected_employee.link:
                         emp_count = emp.get_count_of_shifts(shift, week)
-                        if (
-                            abs(emp_count - selected_employee.get_count_of_shifts(shift, week)) <= 1
-                            or emp.schicht_model == SCHICHT_MODELS[2]
-                            or emp.schicht_model == SCHICHT_MODELS[1]
-                        ):  # Check if Buddy hast +-1 of the same shift
+                        if abs(emp_count - selected_employee.get_count_of_shifts(shift, week)) <= 1 or emp.schicht_model == SCHICHT_MODELS[2] or emp.schicht_model == SCHICHT_MODELS[1]:  # Check if Buddy hast +-1 of the same shift
                             # add buddy if the parameter are ok
                             self.assign_shift(emp, shift)
                             available_employees.remove(emp)
@@ -356,6 +310,8 @@ class ShiftPlanner:
 
             available_employees = [employee for employee in self.employees if week not in employee.urlaub_kw]
             removed_employees = []
+
+            random.shuffle(available_employees)
 
             for employee in available_employees:
                 # Check for SCHICHT_MODELS[1]
@@ -410,9 +366,7 @@ class ShiftPlanner:
                     lowest_count_plus_one = lowest_count + 0.5
 
                     # Filter matching employees with counts in the range [lowest_count, lowest_count + 1]
-                    matching_employees = [
-                        emp for emp in matching_employees if lowest_count <= emp.get_count_of_shifts(shift, week) <= lowest_count_plus_one
-                    ]
+                    matching_employees = [emp for emp in matching_employees if lowest_count <= emp.get_count_of_shifts(shift, week) <= lowest_count_plus_one]
 
                     # Create a list to insert emp double for a better chance to get picked
                     random_choose_list = matching_employees.copy()
@@ -508,9 +462,7 @@ class ShiftPlanner:
                                                         else:
                                                             if emp_without_area_max_run(emp, err):
                                                                 continue
-                                                            factor = self.settings[
-                                                                "FACTOR_FOR_MODEL_3_EMP_WITHOUT_SHIFT"
-                                                            ]  # factor to let even the ppl without schicht this rhythmus the shift do if they can swap
+                                                            factor = self.settings["FACTOR_FOR_MODEL_3_EMP_WITHOUT_SHIFT"]  # factor to let even the ppl without schicht this rhythmus the shift do if they can swap
                                                         if emp_list:
                                                             selected_emp = random.choice(emp_list)
                                                             available_employees.append(
@@ -525,17 +477,11 @@ class ShiftPlanner:
                                                             )
 
                         model_2 = False
-                        filtered_employees = [
-                            emp for emp in available_employees if err[0] in emp[0].schicht_rhythmus and emp[0].schicht_model == SCHICHT_MODELS[3]
-                        ]
+                        filtered_employees = [emp for emp in available_employees if err[0] in emp[0].schicht_rhythmus and emp[0].schicht_model == SCHICHT_MODELS[3]]
                         if filtered_employees:
                             available_employees = filtered_employees  # Filer the list for emp which have the shift in there schicht rhythmus
                         else:
-                            filtered_employees = [
-                                emp
-                                for emp in available_employees
-                                if err[0] not in emp[0].schicht_rhythmus and emp[0].schicht_model == SCHICHT_MODELS[3]
-                            ]
+                            filtered_employees = [emp for emp in available_employees if err[0] not in emp[0].schicht_rhythmus and emp[0].schicht_model == SCHICHT_MODELS[3]]
                             if filtered_employees:
                                 available_employees = filtered_employees  # Filer the list for emp which have the shift in there schicht rhythmus
                             else:
@@ -574,9 +520,7 @@ class ShiftPlanner:
                             # Move emp from shift to the other shift
                             if use_model_2_emp(selected_emp[0]):
                                 # creating hard error if emp add from model 2 to compensate understaffed shift
-                                self.error_model_2_emp_move_to_other_shift.append(
-                                    f"Überprüfen: Bereich {err[1]} unterbesetzt in der {err[0]} Woche {week}. MA {selected_emp[1]} aus der {selected_emp[3]} vom Modell 2 eingetragen. Bitte Überprüfen!!!"
-                                )
+                                self.error_model_2_emp_move_to_other_shift.append(f"Überprüfen: Bereich {err[1]} unterbesetzt in der {err[0]} Woche {week}. MA {selected_emp[1]} aus der {selected_emp[3]} vom Modell 2 eingetragen. Bitte Überprüfen!!!")
 
                             for shift, shift_dict in all_shifts.items():
                                 if selected_emp[5]:

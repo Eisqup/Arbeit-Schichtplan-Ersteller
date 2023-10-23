@@ -14,7 +14,7 @@ class EditAreas:
 
     def create_entries(self):
         # Add an information label at the top
-        info_label = tk.Label(self.parent, text=AREAS_DESCRIPTION)
+        info_label = tk.Label(self.parent, text=AREAS_DESCRIPTION, anchor="w", justify="left")
         info_label.grid(row=0, column=0, columnspan=12, pady=10, sticky="w")
         self.entry_vars = {}
         row = 1
@@ -24,7 +24,10 @@ class EditAreas:
             name_label.grid(row=row, column=0, padx=10, pady=5, sticky="w")
 
             entry_var = tk.StringVar()
-            entry_var.set(key)
+            if key.startswith("-b"):
+                entry_var.set("-b")
+            else:
+                entry_var.set(key)
             entry = tk.Entry(self.parent, textvariable=entry_var)
             entry.grid(row=row, column=1, padx=10, pady=5, sticky="w")
             self.entry_vars[key] = entry_var
@@ -70,10 +73,14 @@ class EditAreas:
         areas = {}
         fill_set = False  # Flag to track if one fill value has been set to True
         unique_prio_values = set()
+        unique_number_for_break = 1
 
         for key in self.areas.keys():
             # Extract values from the entry fields
             name_value = self.entry_vars[key].get()
+            if name_value == "-b":
+                name_value = "-b" + str(unique_number_for_break)
+                unique_number_for_break += 1
             prio_value = self.entry_vars[f"{key}_prio"].get()
             min_value = self.entry_vars[f"{key}_min"].get()
             max_value = self.entry_vars[f"{key}_max"].get()
@@ -106,17 +113,13 @@ class EditAreas:
                     else:
                         fill_set = True
 
-                if not fill_set:
-                    # Show a warning message
-                    messagebox.showwarning("Warning", "None of the 'fill' values are set to True")
-
             # Create the dictionary entry
             areas[name_value] = {"prio": prio_value, "min": min_value, "max": max_value}
             if fill_value:
                 areas[name_value]["fill"] = fill_value
 
         if conform:
-            confirmation_message = "Alle Bereiche richtig?\n\n" + "\n".join([f"{key}: {value}" for key, value in areas.items()])
+            confirmation_message = "Alle Bereiche richtig?\n\n" + "\n".join([f"-b: {value}" if key.startswith("-b") else f"{key}: {value}" for key, value in areas.items()])
             if messagebox.askyesno("Confirmation", confirmation_message):
                 self.areas = areas
                 self.data_manager.save_settings_areas(self.areas)
@@ -133,6 +136,10 @@ class EditAreas:
 
         # Create a new empty row
         new_key = f"New Area {len(self.areas)+ 1}"
+        c = 1
+        while new_key in self.areas.keys():
+            new_key = f"New Area {len(self.areas)+ 1 + c}"
+            c += 1
         self.areas[new_key] = {"prio": "Enter a number", "min": "Enter a number", "max": "Enter a number"}
         # Clear the old widgets from the window
         for widget in self.parent.winfo_children():
@@ -141,7 +148,7 @@ class EditAreas:
 
     def delete_area(self, key):
         # Save the current entries to self.areas
-        self.save_data(conform=False)
+        # self.save_data(conform=False)
 
         # Remove the specified row by its key
         if key in self.areas:
@@ -150,7 +157,7 @@ class EditAreas:
             # Clear the old widgets from the window
             for widget in self.parent.winfo_children():
                 widget.grid_forget()
-
+            self.save_data(conform=False)
             # Recreate the entries to update the view
             self.create_entries()
 

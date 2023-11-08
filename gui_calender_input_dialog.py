@@ -146,7 +146,7 @@ class CalendarInputDialog:
                 ExcelCreator(year, start_week, end_week, program_run, self.settings_areas, self.variable_settings, excel_pw)
 
                 # Display a message box after CalendarCreator is done
-                messagebox.showinfo("Info", "Programm Durchlauf beendet")
+                messagebox.showinfo("Info", "Programmdurchlauf beendet")
 
             else:
                 messagebox.showerror("Invalid Input", "Please enter valid values or check areas.")

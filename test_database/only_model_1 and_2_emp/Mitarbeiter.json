@@ -1,0 +1,826 @@
+{
+  "employees": [
+    {
+      "name": "MA1",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA2",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen EMAG"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA3",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA4",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA5",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA6",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA7",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA8",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA9",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA10",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Sp\u00e4t",
+        "Nacht",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA11",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA12",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA13",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA14",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Nacht",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA15",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA16",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "4",
+        "5",
+        "6"
+      ],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA17",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA18",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA19",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA20",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA21",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA22",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA23",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA24",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA25",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA26",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA267",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA28",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Hartbereich",
+        "FFK"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA29",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen Rasoma",
+        "OP 3",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA30",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA31",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA32",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA33",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA34",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA35",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA36",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen EMAG",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA37",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 3",
+        "FFK"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA38",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA39",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Nacht",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA40",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA41",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "OP 1",
+        "Drehen Niles 1",
+        "Drehen Niles 2"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA42",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Hartbereich"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    },
+    {
+      "name": "MA43",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Drehen Niles 1",
+        "Drehen Niles 2",
+        "Drehen EMAG",
+        "Drehen Rasoma",
+        "OP 3",
+        "Hartbereich",
+        "FFK"
+      ],
+      "urlaub_kw": [],
+      "urlaub_tage": []
+    }
+  ],
+  "settings": {
+    "areas": {
+      "OP 1": {
+        "prio": 3,
+        "min": 2,
+        "max": 4,
+        "fill": true
+      },
+      "Drehen Niles 1": {
+        "prio": 1,
+        "min": 1,
+        "max": 1
+      },
+      "Drehen Niles 2": {
+        "prio": 2,
+        "min": 1,
+        "max": 1
+      },
+      "Drehen EMAG": {
+        "prio": 4,
+        "min": 1,
+        "max": 1
+      },
+      "Drehen Rasoma": {
+        "prio": 5,
+        "min": 1,
+        "max": 1
+      },
+      "OP 3": {
+        "prio": 6,
+        "min": 2,
+        "max": 4
+      },
+      "-b1": {
+        "prio": 100,
+        "min": 0,
+        "max": 0
+      },
+      "Hartbereich": {
+        "prio": 7,
+        "min": 2,
+        "max": 4
+      },
+      "FFK": {
+        "prio": 20,
+        "min": 0,
+        "max": 0
+      },
+      "Dienstleister": {
+        "prio": 22,
+        "min": 0,
+        "max": 3
+      }
+    }
+  }
+}

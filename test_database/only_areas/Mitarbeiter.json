@@ -1,0 +1,38 @@
+{
+  "employees": [],
+  "settings": {
+    "areas": {
+      "Drehen": {
+        "prio": 1,
+        "min": 3,
+        "max": 3,
+        "fill": true
+      },
+      "Bohren": {
+        "prio": 3,
+        "min": 2,
+        "max": 3
+      },
+      "Fr\u00e4sen": {
+        "prio": 2,
+        "min": 3,
+        "max": 3
+      },
+      "-b1": {
+        "prio": 1000,
+        "min": 0,
+        "max": 0
+      },
+      "comau": {
+        "prio": 99,
+        "min": 2,
+        "max": 3
+      },
+      "B & O": {
+        "prio": 89,
+        "min": 1,
+        "max": 1
+      }
+    }
+  }
+}

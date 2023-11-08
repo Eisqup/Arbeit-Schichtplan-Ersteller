@@ -1,7 +1,7 @@
 from constants import *
 import random
 import json
-from employee_class import Employee
+from employee_manager import Employee
 import os
 
 

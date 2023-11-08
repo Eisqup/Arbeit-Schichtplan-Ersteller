@@ -4,7 +4,7 @@ from tkinter import Label, Entry, Button, messagebox, Checkbutton
 
 
 from constants import *
-from calender_manager import CalendarCreator
+from excel_manager import ExcelCreator
 
 MAX_LINE_LENGTH = 85
 
@@ -143,10 +143,10 @@ class CalendarInputDialog:
                     self.a_window.destroy()
                 self.dialog.destroy()
 
-                CalendarCreator(year, start_week, end_week, program_run, self.settings_areas, self.variable_settings, excel_pw)
+                ExcelCreator(year, start_week, end_week, program_run, self.settings_areas, self.variable_settings, excel_pw)
 
                 # Display a message box after CalendarCreator is done
-                messagebox.showinfo("Info", "Schichtplan erstellt")
+                messagebox.showinfo("Info", "Programm Durchlauf beendet")
 
             else:
                 messagebox.showerror("Invalid Input", "Please enter valid values or check areas.")

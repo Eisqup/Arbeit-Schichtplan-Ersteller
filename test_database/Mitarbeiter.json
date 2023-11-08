@@ -1,0 +1,771 @@
+{
+  "employees": [
+    {
+      "name": "MA1",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "10",
+        "11",
+        "16",
+        "32",
+        "33",
+        "34",
+        "35",
+        "36",
+        "37"
+      ],
+      "link": "MA14"
+    },
+    {
+      "name": "MA10",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "5",
+        "15",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34"
+      ]
+    },
+    {
+      "name": "MA11",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "36",
+        "37"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA12",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen"
+      ],
+      "urlaub_kw": [
+        "9",
+        "10",
+        "27",
+        "28",
+        "48",
+        "49",
+        "50",
+        "51"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA13",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "3",
+        "10",
+        "20",
+        "21",
+        "34",
+        "35",
+        "49"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA14",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "10",
+        "15",
+        "20",
+        "21",
+        "23",
+        "26",
+        "27",
+        "28",
+        "29",
+        "30",
+        "36",
+        "40"
+      ],
+      "link": "MA1"
+    },
+    {
+      "name": "MA15",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "20",
+        "21",
+        "29",
+        "35"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA16",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "9",
+        "18",
+        "23",
+        "24",
+        "25",
+        "36",
+        "37",
+        "40"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA17",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "5",
+        "15",
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "43",
+        "44"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA18",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "5",
+        "9",
+        "11",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "23",
+        "32",
+        "33",
+        "34",
+        "44"
+      ]
+    },
+    {
+      "name": "MA19",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Nacht",
+        "Nacht",
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Fr\u00fch",
+        "Nacht",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "6",
+        "24",
+        "25",
+        "26",
+        "27",
+        "28",
+        "31",
+        "33",
+        "34",
+        "35"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA2",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "29",
+        "30",
+        "31",
+        "32",
+        "43",
+        "44"
+      ]
+    },
+    {
+      "name": "MA20",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "3",
+        "4",
+        "10",
+        "23",
+        "25",
+        "42",
+        "43",
+        "44",
+        "49",
+        "50",
+        "51"
+      ]
+    },
+    {
+      "name": "MA21",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "15",
+        "20",
+        "21",
+        "22",
+        "23",
+        "31",
+        "46",
+        "47",
+        "48"
+      ]
+    },
+    {
+      "name": "MA22",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "4",
+        "9",
+        "10",
+        "11",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "29",
+        "37",
+        "38"
+      ]
+    },
+    {
+      "name": "MA23",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "7",
+        "8",
+        "13",
+        "36",
+        "37",
+        "38",
+        "39",
+        "40"
+      ]
+    },
+    {
+      "name": "MA24",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "7",
+        "8",
+        "10",
+        "13",
+        "14",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "36",
+        "37",
+        "38",
+        "39"
+      ]
+    },
+    {
+      "name": "MA25",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen"
+      ],
+      "urlaub_kw": [
+        "6",
+        "15",
+        "29",
+        "30",
+        "31",
+        "32",
+        "44"
+      ]
+    },
+    {
+      "name": "MA26",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "10",
+        "17",
+        "21",
+        "33",
+        "39",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ]
+    },
+    {
+      "name": "MA27",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "7",
+        "17",
+        "23",
+        "25",
+        "35",
+        "36"
+      ]
+    },
+    {
+      "name": "MA28",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "42",
+        "43",
+        "44",
+        "45",
+        "46",
+        "47",
+        "48",
+        "49",
+        "50",
+        "51"
+      ]
+    },
+    {
+      "name": "MA3",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Sp\u00e4t",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Drehen"
+      ],
+      "urlaub_kw": [
+        "1",
+        "2",
+        "3",
+        "7",
+        "15",
+        "23",
+        "27",
+        "28",
+        "29",
+        "51"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA4",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Sp\u00e4t",
+        "Sp\u00e4t",
+        "Sp\u00e4t",
+        "Nacht"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "3",
+        "9",
+        "18",
+        "36",
+        "37",
+        "38"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA5",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Nacht",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen"
+      ],
+      "urlaub_kw": [
+        "10",
+        "12",
+        "15",
+        "32",
+        "33",
+        "40",
+        "44"
+      ],
+      "start_kw_model_2": "default"
+    },
+    {
+      "name": "MA6",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "29",
+        "30",
+        "31",
+        "32",
+        "33",
+        "41",
+        "51"
+      ]
+    },
+    {
+      "name": "MA7",
+      "schicht_model": "Dauerschicht",
+      "schicht_rhythmus": [
+        "Fr\u00fch"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Fr\u00e4sen"
+      ],
+      "urlaub_kw": [
+        "15",
+        "16",
+        "30",
+        "31",
+        "32",
+        "33",
+        "34",
+        "35",
+        "43",
+        "44"
+      ]
+    },
+    {
+      "name": "MA8",
+      "schicht_model": "individuelle Schicht",
+      "schicht_rhythmus": [
+        "Nacht",
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Drehen",
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "10",
+        "17",
+        "18",
+        "33",
+        "34",
+        "35",
+        "50",
+        "51"
+      ]
+    },
+    {
+      "name": "MA9",
+      "schicht_model": "Schicht Zyklus",
+      "schicht_rhythmus": [
+        "Fr\u00fch",
+        "Sp\u00e4t"
+      ],
+      "bereiche": [
+        "Bohren"
+      ],
+      "urlaub_kw": [
+        "5",
+        "13",
+        "23",
+        "24",
+        "25",
+        "26",
+        "29",
+        "31",
+        "33",
+        "35",
+        "51"
+      ],
+      "start_kw_model_2": "default"
+    }
+  ],
+  "settings": {
+    "areas": {
+      "FFK": {
+        "prio": 199,
+        "min": 0,
+        "max": 1
+      },
+      "Drehen": {
+        "prio": 1,
+        "min": 3,
+        "max": 3,
+        "fill": true
+      },
+      "Bohren": {
+        "prio": 3,
+        "min": 2,
+        "max": 3
+      },
+      "Fr\u00e4sen": {
+        "prio": 2,
+        "min": 3,
+        "max": 3
+      },
+      "Platzhalter": {
+        "prio": 1111,
+        "min": 0,
+        "max": 3
+      },
+      "-b1": {
+        "prio": 1000,
+        "min": 0,
+        "max": 0
+      },
+      "B&O": {
+        "prio": 42,
+        "min": 1,
+        "max": 1
+      },
+      "\u00d6VH": {
+        "prio": 32,
+        "min": 1,
+        "max": 1
+      },
+      "Modul 2": {
+        "prio": 122,
+        "min": 1,
+        "max": 2
+      },
+      "Comau": {
+        "prio": 22,
+        "min": 1,
+        "max": 1
+      },
+      "Modul 3": {
+        "prio": 52,
+        "min": 2,
+        "max": 3
+      },
+      "Dienstleister": {
+        "prio": 622,
+        "min": 0,
+        "max": 3
+      },
+      "-b2": {
+        "prio": 8888,
+        "min": 0,
+        "max": 0
+      },
+      "B\u00fcro": {
+        "prio": 123123,
+        "min": 0,
+        "max": 4
+      }
+    }
+  }
+}

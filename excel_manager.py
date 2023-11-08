@@ -6,7 +6,7 @@ import locale
 import time
 
 from constants import SETTINGS_VARIABLES, SCHICHT_RHYTHMUS
-from shiftPlanner_class import ShiftPlanner
+from shift_planner_manager import ShiftPlanner
 from get_holidays import get_holiday_dates
 from vba import vba_code
 
@@ -33,7 +33,7 @@ def find_max_employee_count(data, area_in, areas_setting, default_extra_rows):
     return max_count
 
 
-class CalendarCreator:
+class ExcelCreator:
     def __init__(self, year, start_week, end_week, program_runs, areas_setting, variable_settings, excel_pw):
         self.year = year
         self.start_week = start_week

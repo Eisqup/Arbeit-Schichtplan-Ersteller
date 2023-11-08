@@ -387,14 +387,22 @@ class GUIManager:
                 message = "Mitarbeiter hinzugefügt:\n"
                 for key, value in employee_data.items():
                     message += f"{key}: {value}\n"
+
+                messagebox.showinfo(
+                    "Info",
+                    f"{message}",
+                )
             else:
-                message = "Mitarbeiterdaten aktualisiert\n"
+                if result == "yes":
+                    message = "Mitarbeiterdaten aktualisiert\n"
+                    messagebox.showinfo(
+                        "Info",
+                        f"{message}",
+                    )
+                else:
+                    message = "Abbruch"
 
             print(message)
-            messagebox.showinfo(
-                "Info",
-                f"{message}",
-            )
 
         # Insert the newly created/updated employee's name into the Listbox
         self.employee_listbox.delete(0, tk.END)

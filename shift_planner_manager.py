@@ -236,6 +236,10 @@ class ShiftPlanner:
                                 else:
                                     self.error_areas.append(f"Überprüfen: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt trotz fehlender Quali")
 
+                if area_ran is None:
+                    area_ran = random.choice(selected_employee.bereiche)
+                    self.error_areas.append(f"Überprüfen: Alle Bereich voll und keine MA kann gewechselt werden MA({selected_employee.name}) zum {area_ran} geschickt in der Woche:{week} Schicht: {shift}.")
+
                 areas[area_ran].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
 

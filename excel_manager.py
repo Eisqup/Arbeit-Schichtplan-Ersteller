@@ -880,6 +880,7 @@ class ExcelCreator:
         list_missing_quali_for_area = find_sentences_with_word(all_errors, "fehlt die Quali fürs")
         list_shifts_area_not_even = find_sentences_with_word(all_errors, "Info: Schichten sind nicht ausgeglichen.")
         list_area_has_more_then_max_emp = find_sentences_with_word(all_errors, " hat mehr als")
+        list_emp_force_to_send = find_sentences_with_word(all_errors, "Überprüfen: Alle Bereich voll")
 
         col = 2
         row = 2
@@ -930,6 +931,15 @@ class ExcelCreator:
                 row += 1
             row = 2
             sheet.write(row, col, "Bereich hat mehr als die maximale Anzahl an Mitarbeiter", format_1)
+            col += 1
+        if list_emp_force_to_send:
+            sheet.set_column(col, col, col_size * 2)
+            row += 1
+            for massage in list_emp_force_to_send:
+                sheet.write(row, col, str(massage), format_2)
+                row += 1
+            row = 2
+            sheet.write(row, col, "Bereich hat zu viele Mitarbeiter, weil nicht gewechselt werden konnte", format_1)
             col += 1
 
     def add_log(self):

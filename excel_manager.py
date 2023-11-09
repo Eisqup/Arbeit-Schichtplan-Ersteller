@@ -736,13 +736,13 @@ class ExcelCreator:
             sheet.write(2, col, f"{shift}", border_format_big_lock)
             column_names.append(shift)
             col += 1
-        sheet.write(2, col, "Gesamt", border_format_big_lock)
-        column_names.append("Gesamt")
-        sheet.set_column(col, col, 15)
+        sheet.write(2, col, "Anwesende KW´s", border_format_big_lock)
+        column_names.append("Anwesende KW´s")
+        sheet.set_column(col, col, 18)
         col += 1
-        sheet.write(2, col, "Abwesend", border_format_big_lock)
-        column_names.append("Abwesend")
-        sheet.set_column(col, col, 15)
+        sheet.write(2, col, "Abwesende KW´s", border_format_big_lock)
+        column_names.append("Abwesende KW´s")
+        sheet.set_column(col, col, 18)
         col += 1
         for shift in SCHICHT_RHYTHMUS.values():
             sheet.set_column(col, col, 15)
@@ -877,14 +877,14 @@ class ExcelCreator:
 
         list_area_with_understaffed_emp = find_sentences_with_word(all_errors, "Überprüfen: Bereich unterbesetzt.")
         list_model_2_emp_moved_from_shift = find_sentences_with_word(all_errors, "vom Modell 2 eingetragen.")
-        list_missing_quali_for_area = find_sentences_with_word(all_errors, "fehlt die Quali fürs")
+        list_missing_quali_for_area = find_sentences_with_word(all_errors, "Info: MA")
         list_shifts_area_not_even = find_sentences_with_word(all_errors, "Info: Schichten sind nicht ausgeglichen.")
         list_area_has_more_then_max_emp = find_sentences_with_word(all_errors, " hat mehr als")
-        list_emp_force_to_send = find_sentences_with_word(all_errors, "Überprüfen: Alle Bereich voll")
+        list_emp_force_to_send = find_sentences_with_word(all_errors, "Überprüfen: MA")
 
         col = 2
         row = 2
-        col_size = 80
+        col_size = 90
 
         if list_area_with_understaffed_emp:
             sheet.set_column(col, col, col_size)
@@ -906,7 +906,7 @@ class ExcelCreator:
             sheet.write(row, col, "Mitarbeiter mit Model 2 verschoben", format_1)
             col += 1
         if list_missing_quali_for_area:
-            sheet.set_column(col, col, col_size + 40)
+            sheet.set_column(col, col, col_size * 2)
             row += 1
             for massage in list_missing_quali_for_area:
                 sheet.write(row, col, str(massage), format_2)

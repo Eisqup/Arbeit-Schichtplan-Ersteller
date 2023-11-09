@@ -210,10 +210,42 @@ class ShiftPlanner:
                 num = 0
                 area_ran = None
                 for area_temp in selected_employee.bereiche:
-                    # check for the area where the most emp still are missed
+                    # check for the area where the most emp still are missed in select_emp areas
                     if len(areas[area_temp]) < self.areas[area_temp]["max"] and num < self.areas[area_temp]["max"] - len(areas[area_temp]):
                         area_ran = area_temp
                         num = self.areas[area_temp]["max"] - len(areas[area_temp])
+
+                # if still no area is founded search the areas, if one emp can change the postion so the missing emp can move in his area
+                if area_ran is None:
+                    areas_to_move = set()
+                    change_emp = []
+                    for area_temp in selected_employee.bereiche:
+                        for emp in areas[area_temp]:
+                            areas_to_move.update(set(emp.bereiche) - set(selected_employee.bereiche))
+                            change_emp.append([emp, area_temp])
+                    if areas_to_move:
+                        areas_remove = []
+                        for area_temp in areas_to_move:
+                            if len(areas[area_temp]) >= self.areas[area_temp]["max"]:
+                                areas_remove.append(area_temp)
+                        if areas_remove:
+                            for areas_temp in areas_remove:
+                                areas_to_move.remove(areas_temp)
+                        move_list = []
+                        if areas_to_move:
+                            for area_temp in areas_to_move:
+                                for emp, area_right_now in change_emp:
+                                    if area_temp in emp.bereiche:
+                                        move_list.append([emp, area_temp, area_right_now])
+                        if move_list:
+                            select_emp = random.choice(move_list)
+                            areas[select_emp[1]].append(select_emp[0])
+                            areas[select_emp[2]].remove(select_emp[0])
+                            area_ran = select_emp[2]
+                            self.error_areas_small.append(
+                                f"Info: MA ({selected_employee.name}) fehlt die Quali für verfügbare Bereiche! Woche:{week} Schicht: {shift}. {select_emp[0].name} geht deswegen vom {select_emp[2]} zum {select_emp[1]} und {selected_employee.name} zum {select_emp[2]}."
+                            )
+
                 # if all areas have max number emp add emp to the fill area
                 if area_ran is None:
                     for key, value in self.areas.items():
@@ -231,14 +263,18 @@ class ShiftPlanner:
                                     select_emp = random.choice(change_emp)
                                     areas[area_ran].append(select_emp[0])
                                     areas[select_emp[1]].remove(select_emp[0])
+                                    self.error_areas_small.append(
+                                        f"Info: MA ({selected_employee.name}) fehlt die Quali für verfügbare Bereiche! Woche:{week} Schicht: {shift}. {select_emp[0].name} geht deswegen vom {select_emp[1]} zum {area_ran} und {selected_employee.name} zum {select_emp[1]}."
+                                    )
                                     area_ran = select_emp[1]
-                                # if no one to change is founded hard error and send emp to fill area
+                                    break
                                 else:
-                                    self.error_areas.append(f"Überprüfen: MA ({selected_employee.name}) fehlt die Quali fürs {area} in der Woche:{week} Schicht: {shift}. MA zum {area_ran} geschickt trotz fehlender Quali")
+                                    area_ran = None
 
+                # random pick ob ability if no other area is available
                 if area_ran is None:
                     area_ran = random.choice(selected_employee.bereiche)
-                    self.error_areas.append(f"Überprüfen: Alle Bereich voll und keine MA kann gewechselt werden MA({selected_employee.name}) zum {area_ran} geschickt in der Woche:{week} Schicht: {shift}.")
+                    self.error_areas.append(f"Überprüfen: MA ({selected_employee.name}) alle Bereich voll und keine MA kann gewechselt werden MA zum Bereich {area_ran} gesendet in der Woche:{week} Schicht: {shift}.")
 
                 areas[area_ran].append(selected_employee)
                 shift_with_emp.remove(selected_employee)
@@ -591,7 +627,7 @@ class ShiftPlanner:
                 if count_emp > 0:
                     err_points += max_num - sum_of_shifts / count_emp
 
-            return err_points
+            return err_points * 2
 
         min_length = float("inf")
         best_shiftPlan = None

@@ -16,9 +16,11 @@ def get_holiday_dates(year):
     school_holidays_dates = []
     public_holidays_dates = []
     print("Try to get holidays data from the API")
-    # Get school holiday data
-    response_school_holidays = requests.get(school_holidays_url)
-    if response_school_holidays.status_code == 200:
+
+    try:
+        # Get school holiday data
+        response_school_holidays = requests.get(school_holidays_url)
+        response_school_holidays.raise_for_status()  # Raise an error for bad responses
         school_holidays_data = response_school_holidays.json()
         # Extract and format school holiday dates
         for holiday in school_holidays_data:
@@ -33,12 +35,13 @@ def get_holiday_dates(year):
                     school_holidays_dates.append(formatted_date)
                 current_date += timedelta(days=1)
         print("School data retrieved from the API successfully.")
-    else:
-        print("Fail to fetch data from school holiday.\nCheck Internet!")
+    except requests.exceptions.RequestException as e:
+        print(f"Fail to fetch data from school holiday.\nCheck Internet!")
 
-    # Get public holiday data
-    response_public_holidays = requests.get(public_holidays_url)
-    if response_public_holidays.status_code == 200:
+    try:
+        # Get public holiday data
+        response_public_holidays = requests.get(public_holidays_url)
+        response_public_holidays.raise_for_status()  # Raise an error for bad responses
         public_holidays_data = response_public_holidays.json()
         # Extract and format public holiday dates
         for holiday in public_holidays_data:
@@ -49,8 +52,8 @@ def get_holiday_dates(year):
             formatted_date = current_date.strftime("%d.%m")
             public_holidays_dates.append(formatted_date)
         print("Holiday data retrieved from the API successfully.")
-    else:
-        print("Fail to fetch data from public holiday.\nCheck Internet!")
+    except requests.exceptions.RequestException as e:
+        print(f"Fail to fetch data from public holiday.\nCheck Internet!")
 
     return school_holidays_dates, public_holidays_dates
 

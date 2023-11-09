@@ -988,17 +988,17 @@ class ExcelCreator:
                     wb = app.books.open(xlsx_file_path)
 
                     try:
-                        wb.api.VBProject.VBComponents("ThisWorkbook").CodeModule.AddFromString(vba_code_new)
+                        wb.api.VBProject.VBComponents(wb.api.CodeName).CodeModule.AddFromString(vba_code_new)
                     except Exception as e:
                         print(
                             f"Cant add Macro: {str(e)}\nExcel macros are not trusted. "
                             "To enable macros, please check Microsoft's documentation: "
                             "https://support.microsoft.com/en-us/office/enable-or-disable-macros-in-microsoft-365-files-12b036fd-d140-4e74-b45e-16fed1a7e5c6"
                         )
-
                     # Save it as XLSM with error handling for savSe
                     try:
                         wb.save(xlsm_file_path)
+                        self.delete_xlsx_file()
                     except Exception as e:
                         print(f"An error occurred while saving the XLSM file: {str(e)}")
                         # Create a manual VBA file
@@ -1043,13 +1043,12 @@ class ExcelCreator:
         self.workbook.close()
         print("Add Macro to Excel...")
         self.change_workbook_type_and_add_vba()
-        self.delete_xlsx_file()
         time.sleep(2)
         print(f"Schichtplan {self.year} erstellt.")
 
 
 if __name__ == "__main__":
-    CalendarCreator(
+    ExcelCreator(
         year=2024,
         start_week=2,
         end_week=50,

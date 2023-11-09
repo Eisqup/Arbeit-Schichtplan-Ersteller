@@ -57,7 +57,7 @@ Erstelle Schichtplan Button:
 - Einstellungen sind hier verfügbar und mit einer Beschreibung versehen.
 - Je häufiger der Schichtplan läuft, desto höher ist die Wahrscheinlichkeit, einen besseren Schichtplan zu erhalten.
 - Excel muss installiert sein, und Makros für Excel müssen erlaubt sein (Excel Trust Center).
-- Eine Internetverbindung wird benötigt, um Schulferien und Feiertage in die Excel-Datei aufzunehmen.
+- Eine Internetverbindung wird benötigt, um Schulferien und Feiertage in die Excel-Datei aufzunehmen und die Excel Macros hinzuzufügen.
 - Ein Schichtplan kann auch erstellt werden ohne Mitarbeiterinfos. Der Schichtplan wird nach den Bereichsvorgaben erstellt und die Formeln/Statistik angepasst. Wenn Mitarbeiter später hinzugefügt werden, ändern sich die Statistiken entsprechend interaktiv.
 
 Algorithmus:

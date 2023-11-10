@@ -194,7 +194,7 @@ class GUIManager:
         separator1.grid(row=11 + add_len, columnspan=3, sticky="ew", padx=10, pady=10)
 
         # Label for entering urlaub_kw
-        urlaub_kw_label = Label(self.window, text="Mitarbeiter Urlaub in KW (sepertatet with space):")
+        urlaub_kw_label = Label(self.window, text="Mitarbeiter Urlaub in KW              \n(Separat mit leerzeichen und in Range bsp. 1 2 4-10):")
         urlaub_kw_label.grid(row=12 + add_len, column=0, padx=10, pady=5, sticky="w")
 
         self.urlaub_kw_entry = tk.Entry(self.window)
@@ -296,26 +296,34 @@ class GUIManager:
         # Function to split the input into a list
         def split_and_check_input(input_str, is_weeks=False):
             values = input_str.split()
-            if is_weeks:
-                # Validate weeks (1-52)
-                for value in values:
+            parsed_values = []
+
+            for value in values:
+                # Check if the value contains a hyphen indicating a range
+                if "-" in value:
+                    start, end = value.split("-")
+                    try:
+                        start = int(start)
+                        end = int(end)
+                        if not (1 <= start <= 52) or not (1 <= end <= 52) or start > end:
+                            raise ValueError("Invalid week range. Weeks must be integers between 1 and 52, and start must be less than or equal to end.")
+                    except ValueError:
+                        messagebox.showerror("Error", f"Invalid week range: {value}. Weeks must be integers between 1 and 52, and start must be less than or equal to end.")
+                        return None  # Exit and handle the error
+
+                    # Add individual weeks in the range to parsed_values
+                    parsed_values.extend(range(start, end + 1))
+                else:
                     try:
                         week = int(value)
                         if not (1 <= week <= 52):
                             raise ValueError("Week must be between 1 and 52")
+                        parsed_values.append(week)
                     except ValueError:
                         messagebox.showerror("Error", f"Invalid week value: {value}. Weeks must be integers between 1 and 52.")
                         return None  # Exit and handle the error
 
-            else:
-                # Validate dates (DD.MM)
-                date_pattern = re.compile(r"^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])$")
-                for value in values:
-                    if not date_pattern.match(value):
-                        messagebox.showerror("Error", f"Invalid date format: {value}. Dates must be in DD.MM format.")
-                        return None  # Exit and handle the error
-
-            return values
+            return parsed_values
 
         name = self.name_entry.get()
         selected_shift_model = self.shift_model_var.get()

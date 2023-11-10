@@ -49,7 +49,7 @@ Layout Information:
 Bereiche bearbeiten Button:
 - Die Sortierung der Bereiche entspricht der Sortierung in der Excel-Datei.
 - Das "-b" wird genutzt, um eine Trennung in der Excel-Datei zu erstellen, um eventuell Überbereiche aufzuteilen.
-- Bereiche mit einem minimalen Wert von 0 werden im Algorithmus nicht beachtet, aber die Excel-Datei erstellt für den Bereich zusätzliche Zeilen entsprechend des maximalen Werts.
+- Bereiche mit einem minimalen Wert von 0 werden im Algorithmus nicht beachtet und in der GUI nicht angezeigt, aber die Excel-Datei erstellt für den Bereich zusätzliche Zeilen entsprechend des maximalen Werts.
 - Die "Prio" bestimmt die Wichtigkeit des Bereichs. Zum Beispiel, wenn zwei Bereiche jeweils einen Mitarbeiter benötigen und nur ein Mitarbeiter verfügbar ist, welcher Bereich ist wichtiger? 1 ist am besten.
 
 Erstelle Schichtplan Button:

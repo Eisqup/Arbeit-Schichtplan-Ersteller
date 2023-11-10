@@ -333,6 +333,10 @@ class GUIManager:
         filtered_data = [key for key, value in self.settings_areas.items() if value.get("min", 0) > 0]
         self.selected_bereich_list = [filtered_data[index] for index, var in enumerate(self.bereich_vars) if var.get()]
 
+        if selected_shift_model == 1 and len(self.selected_rhythmus_list) > 1:  # Für Dauerschicht
+            messagebox.showerror("Error", f"{SCHICHT_MODELS[1]} kann nur einen Rhythmus haben.")
+            return
+
         # if urlaub_kw is None or urlaub_day is None:
         if urlaub_kw is None:
             return

@@ -36,13 +36,18 @@ class GUIManager:
 
         # reader grid
         self.create_gui()
-        self.show_program_infos()
+        self.window.after(200, self.show_program_infos)
 
     def show_program_infos(self):
-        messagebox.showinfo(
-            "Programm Informationen",
-            PROGRAMM_INFOS,
-        )
+        # Create a new Toplevel window
+        info_window = tk.Toplevel(self.window)
+        info_window.title("Programm Informationen")
+
+        custom_font = ("Arial", 14)
+
+        # Create a Label widget in the Toplevel window
+        text_label = tk.Label(info_window, text=PROGRAMM_INFOS, wraplength=1100, anchor="w", justify="left", font=custom_font)
+        text_label.pack(padx=10, pady=10)
 
     def show_about_info(self):
         def open_github(event):

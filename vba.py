@@ -194,47 +194,60 @@ Sub CheckAndLogChanges()
     Dim CellKey As String
     Dim Sh As Worksheet
     Dim cell As Range
-
+    Dim targetRange As Range
+    Dim cellValue As Variant
+    Dim cellType As String
+    
     Set ws2 = ThisWorkbook.Worksheets("Log")
+    
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+    
     ShouldRunWorkbookOpen = False
+    
     If WorkbookOpenHasRun Then
         For Each Sh In ThisWorkbook.Sheets
             If SheetIsInRange(Sh.Name) Then
-                Dim Target As Range
-                Set Target = Sh.UsedRange
-
-                For Each cell In Target
-                    CellKey = Sh.Name & "_" & cell.Address
-                    If IsNotDouble(cell.value) Then
-                        If KeyExists(OriginalValues, CellKey) Then
-                            cellType = TypeName(cell.value)
-                            value = OriginalValues(CellKey)
-
-                            ' Check if Value and Cell.Value are not equal
-                            If value <> cell.value Then
-                                ' Add the change to the LogData collection
-                                LogData.Add Array(Now(), Environ("UserName"), Sh.Name, "Cell " & cell.Address, IIf(IsEmpty(cell.value), "", cell.value), value)
+                Set targetRange = Sh.UsedRange
+                
+                Dim data As Variant
+                data = targetRange.Value ' Read entire range into array
+                
+                For i = 1 To targetRange.Rows.Count
+                    For j = 1 To targetRange.Columns.Count
+                        CellKey = Sh.Name & "_" & targetRange.Cells(i, j).Address
+                        cellValue = data(i, j)
+                        
+                        If IsNotDouble(cellValue) Then
+                            If KeyExists(OriginalValues, CellKey) Then
+                                value = OriginalValues(CellKey)
+                                
+                                If value <> cellValue Then
+                                    LogData.Add Array(Now(), Environ("UserName"), Sh.Name, "Cell " & targetRange.Cells(i, j).Address, IIf(IsEmpty(cellValue), "", cellValue), value)
+                                    ShouldRunWorkbookOpen = True
+                                End If
+                            ElseIf Not IsEmpty(cellValue) Then
+                                LogData.Add Array(Now(), Environ("UserName"), Sh.Name, "Cell " & targetRange.Cells(i, j).Address, IIf(IsEmpty(cellValue), "", cellValue), "")
                                 ShouldRunWorkbookOpen = True
                             End If
-                        ElseIf Not IsEmpty(cell.value) Then
-                            ' Add changes for non-empty cells that were not in OriginalValues
-                            LogData.Add Array(Now(), Environ("UserName"), Sh.Name, "Cell " & cell.Address, IIf(IsEmpty(cell.value), "", cell.value), "")
-                            ShouldRunWorkbookOpen = True
                         End If
-                    End If
-                Next cell
+                    Next j
+                Next i
             End If
         Next Sh
     End If
     
-    ' Check if the LogData collection is not empty and call UpdateLogTable
     If LogData.Count > 0 Then
         UpdateLogTable
     End If
-
-    ' If ShouldRunWorkbookOpen is True, re-run the Workbook_Open function to capture new original values
+    
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+    
     If ShouldRunWorkbookOpen Then
-        ShouldRunWorkbookOpen = False ' Reset the flag
+        ShouldRunWorkbookOpen = False
         Set OriginalValues = InitializeOriginalValues
         WorkbookOpenHasRun = True
     End If
@@ -279,7 +292,7 @@ Sub UpdateLogTable()
 
     ' Show "Bitte warten" message in the status bar
     Application.StatusBar = "Bitte warten...
-    
+        
     ' Add multiple rows to the table using a loop
     For Each rowData In LogData
         Set newRow = tbl.ListRows.Add(Position:=1, AlwaysInsert:=True)

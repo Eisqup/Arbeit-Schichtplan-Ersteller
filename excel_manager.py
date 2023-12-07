@@ -178,7 +178,7 @@ class ExcelCreator:
             col = start_col
 
             # EMP-Name tabel, date tabel, presence tabel, count emp view
-            border_format_names = {"left": 2, "right": 2, "font_size": 15, "hidden": 1, "locked": 0}
+            border_format_names = {"left": 2, "right": 2, "font_size": 15, "hidden": 0, "locked": 0}
 
             # Create EMP_NAME tabel
             col = start_col + 1
@@ -260,7 +260,7 @@ class ExcelCreator:
                 elif area_index == bot_line - 1:
                     bottom = 2
 
-                return {"left": left, "right": right, "top": top, "bottom": bottom, "font_size": 13, "hidden": 1, "locked": 0}
+                return {"left": left, "right": right, "top": top, "bottom": bottom, "font_size": 13, "hidden": 0, "locked": 0}
 
             col = start_col + 2
             for runs in SCHICHT_RHYTHMUS.values():
@@ -390,8 +390,8 @@ class ExcelCreator:
             col + self.tabel_col_length + 5,
         )
         # Formats
-        border_format_big_lock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 1}
-        border_format_big_unlock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 0}
+        border_format_big_lock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 0, "locked": 1}
+        border_format_big_unlock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 0, "locked": 0}
 
         for week, week_sheet in self.week_sheets.items():
             # Berechne den Starttag der Woche
@@ -499,8 +499,8 @@ class ExcelCreator:
         sheet.freeze_panes(3, 3)
         sheet.set_row(0, 6)
         sheet.set_column(0, 0, 1)
-        sheet.set_column("A:A", None, None, {"hidden": 1})
-        border_format_big_lock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 1, "font_size": 16}
+        sheet.set_column("A:A", None, None, {"hidden": 0})
+        border_format_big_lock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 0, "locked": 1, "font_size": 16}
         row_size = 20
 
         # Create Range Dict to create formals later
@@ -700,7 +700,7 @@ class ExcelCreator:
         sheet.freeze_panes(3, 0)
         sheet.set_row(0, 6)
         sheet.set_column(0, 0, 1)
-        sheet.set_column("B:B", None, None, {"hidden": 1})
+        sheet.set_column("B:B", None, None, {"hidden": 0})
         border_format_big_lock = self.create_format(
             {
                 "left": 2,
@@ -708,7 +708,7 @@ class ExcelCreator:
                 "top": 2,
                 "bottom": 2,
                 "font_size": 14,
-                "hidden": 1,
+                "hidden": 0,
                 "locked": 1,
             }
         )
@@ -767,7 +767,7 @@ class ExcelCreator:
                             "top": 2,
                             "bottom": 2,
                             "font_size": 14,
-                            "hidden": 1,
+                            "hidden": 0,
                             "locked": 0,
                         }
                     ),
@@ -784,7 +784,7 @@ class ExcelCreator:
                             "top": 2,
                             "bottom": 2,
                             "font_size": 14,
-                            "hidden": 1,
+                            "hidden": 0,
                             "locked": 0,
                         }
                     ),
@@ -867,8 +867,8 @@ class ExcelCreator:
             found_sentences = [sentence for sentence in sentences if search_word in sentence]
             return found_sentences
 
-        format_2 = self.create_format({"left": 1, "right": 1, "top": 1, "bottom": 1, "hidden": 1, "locked": 0, "font_size": 13})
-        format_1 = self.create_format({"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 1, "locked": 0, "font_size": 13})
+        format_2 = self.create_format({"left": 1, "right": 1, "top": 1, "bottom": 1, "hidden": 0, "locked": 0, "font_size": 13})
+        format_1 = self.create_format({"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 0, "locked": 0, "font_size": 13})
 
         sheet = self.workbook.add_worksheet("Fehler Meldungen")
         # self.all_sheets.append(sheet)

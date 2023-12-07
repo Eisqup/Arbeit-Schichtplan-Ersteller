@@ -89,6 +89,7 @@ Sub CopySheetsToDirectory(destinationPath As String)
 
     Dim newWb As Workbook
     Dim filePath As String
+    Dim activeSheetName As String
 
     ' Get the name of the current workbook without the file extension
     Dim currentWorkbookName As String
@@ -117,8 +118,6 @@ Sub CopySheetsToDirectory(destinationPath As String)
     If Len(Dir(filePath)) > 0 Then
         ' If the file exists, open it and update the sheets
         Set newWb = Workbooks.Open(filePath, WriteResPassword:="DasIstEinGeheim")
-        newWb.Close SaveChanges:=False
-        Set newWb = Workbooks.Open(filePath, WriteResPassword:="DasIstEinGeheim")
 
         ' Delete sheet in newWb that is within the specified range
         For Each newSheet In newWb.Sheets
@@ -132,6 +131,15 @@ Sub CopySheetsToDirectory(destinationPath As String)
             On Error GoTo 0
         Next newSheet
 
+        activeSheetName = ThisWorkbook.ActiveSheet.Name
+
+        ' Activate the sheet in newWb based on the active sheet name in ThisWorkbook
+        On Error Resume Next ' Handle the case where the sheet may not exist in newWb
+        newWb.Sheets(activeSheetName).Activate
+        On Error GoTo 0 ' Reset error handling to default
+
+        newWb.ActiveSheet.Range("A1").Select
+
         newWb.Save
     Else
         ' If the file doesn't exist, create a new workbook
@@ -144,6 +152,15 @@ Sub CopySheetsToDirectory(destinationPath As String)
             End If
         Next i
         ' Save the consolidated workbook with a password
+
+        activeSheetName = ThisWorkbook.ActiveSheet.Name
+
+        ' Activate the sheet in newWb based on the active sheet name in ThisWorkbook
+        On Error Resume Next ' Handle the case where the sheet may not exist in newWb
+        newWb.Sheets(activeSheetName).Activate
+        On Error GoTo 0 ' Reset error handling to default
+
+        newWb.ActiveSheet.Range("A1").Select
 
         newWb.SaveAs filePath, WriteResPassword:="DasIstEinGeheim"
  

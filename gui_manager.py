@@ -3,7 +3,7 @@
 # Created by: Steven Stegink
 
 import tkinter as tk
-from tkinter import Label, Button, StringVar, Radiobutton, Checkbutton, ttk, messagebox, Entry, Frame
+from tkinter import Label, Button, StringVar, Radiobutton, Checkbutton, ttk, messagebox, Entry, Frame, scrolledtext
 import re
 import webbrowser
 
@@ -43,11 +43,20 @@ class GUIManager:
         info_window = tk.Toplevel(self.window)
         info_window.title("Programm Informationen")
 
+        # Make the Toplevel window resizable
+        info_window.resizable(True, True)
+
         custom_font = ("Arial", 14)
 
-        # Create a Label widget in the Toplevel window
-        text_label = tk.Label(info_window, text=PROGRAMM_INFOS, wraplength=1100, anchor="w", justify="left", font=custom_font)
-        text_label.pack(padx=10, pady=10)
+        # Create a ScrolledText widget in the Toplevel window
+        text_widget = scrolledtext.ScrolledText(info_window, wrap=tk.WORD, width=100, height=20, font=custom_font)
+        text_widget.pack(padx=10, pady=10)
+
+        # Insert your program information into the ScrolledText widget
+        text_widget.insert(tk.END, PROGRAMM_INFOS)
+
+        # Disable the ability to edit the text (optional)
+        text_widget.configure(state="disabled")
 
     def show_about_info(self):
         def open_github(event):

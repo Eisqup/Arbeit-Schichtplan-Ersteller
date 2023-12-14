@@ -394,14 +394,17 @@ class ExcelCreator:
         border_format_big_unlock = {"left": 2, "right": 2, "top": 2, "bottom": 2, "hidden": 0, "locked": 0}
 
         for week, week_sheet in self.week_sheets.items():
-            # Berechne den Starttag der Woche
-            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday())
+            # Calculate the first day of the specified week
+            first_day = datetime.datetime.strptime(f"{self.year}-{week}-1", "%G-%V-%u")
+
+            # Create a datetime.date object
+            monday_of_week = datetime.date(first_day.year, first_day.month, first_day.day)
 
             week_sheet.set_row(0, 6)
             week_sheet.set_column(0, 0, 1)
             add_header(week_sheet)
             add_areas_tabel(week_sheet, start_row=row, start_col=col)
-            add_tabel(week_sheet, start_row=row, start_col=col, start_date_of_the_week=start_date_of_the_week, week=week)
+            add_tabel(week_sheet, start_row=row, start_col=col, start_date_of_the_week=monday_of_week, week=week)
 
             ##### Creating breaks #####
             if any(key.startswith("-b") for key in self.areas_setting.keys()):
@@ -422,10 +425,48 @@ class ExcelCreator:
             add_legend(week_sheet, start_row=row, start_col=col)
 
     def create_sheets_for_weeks(self):
+        def check_specific_days_of_next_year(year):
+            # Get the last day of the year
+            last_day = datetime.datetime(year, 12, 31)
+
+            # Check if the last day is in KW1 of the next year
+            is_kw1 = last_day.isocalendar()[1] == 1
+
+            # Check if the first day is not Sunday (ISO weekday 7) or Saturday (ISO weekday 6)
+            is_not_sunday_saturday = last_day.weekday() not in {6, 7}
+
+            return is_kw1 and is_not_sunday_saturday
+
+        def check_specific_days_of_this_year(year):
+            # Get the dates for the days in week 1 of the next year
+            first_day = datetime.datetime.strptime(f"{year- 1}-52-1", "%G-%V-%u")
+            first_day = datetime.date(first_day.year, first_day.month, first_day.day)
+
+            for i in range(self.week_length):
+                if first_day.year == year:
+                    return True
+                first_day += datetime.timedelta(days=1)
+
+            return False
+
+        # Check if days are in the next year
+        if check_specific_days_of_this_year(self.year):
+            # If true, add a sheet for the last week of the last year
+            next_year_sheet = self.workbook.add_worksheet(f"KW52_{self.year -1}")
+            self.week_sheets[0] = next_year_sheet
+            self.all_sheets.append(next_year_sheet)
+
         for week in range(1, 52 + 1):
             week_sheet = self.workbook.add_worksheet(f"KW{week}")
             self.week_sheets[week] = week_sheet
             self.all_sheets.append(week_sheet)
+
+        # Check if days are in the next year
+        if check_specific_days_of_next_year(self.year):
+            # If true, add a sheet for the first week of the next year
+            next_year_sheet = self.workbook.add_worksheet(f"KW1_{self.year + 1}")
+            self.week_sheets[53] = next_year_sheet
+            self.all_sheets.append(next_year_sheet)
 
     def insert_emp_to_weeks(self):
         for week, week_shift in self.shift_plan.items():
@@ -478,13 +519,18 @@ class ExcelCreator:
                 result_row_postion_list.append(row_postion - 1)
 
         for week, sheet in self.week_sheets.items():
-            start_date_of_the_week = datetime.date(self.year, 1, 1) + datetime.timedelta(days=((week - 1) * 7) - datetime.date(self.year, 1, 1).weekday())
+            # Calculate the first day of the specified week
+            first_day = datetime.datetime.strptime(f"{self.year}-{week}-1", "%G-%V-%u")
+
+            # Create a datetime.date object
+            monday_of_week = datetime.date(first_day.year, first_day.month, first_day.day)
+
             col = self.start_col + 2
             for runs in SCHICHT_RHYTHMUS.values():
                 for day in range(self.week_length):
                     row = self.start_row + 2
 
-                    date_of_the_week = start_date_of_the_week + datetime.timedelta(days=day)
+                    date_of_the_week = monday_of_week + datetime.timedelta(days=day)
                     if date_of_the_week.strftime("%d.%m") in self.public_holidays or date_of_the_week.weekday() in [5, 6]:
                         for row in range(row, row + self.tabel_row_length - 1):
                             if row not in result_row_postion_list:
@@ -1059,9 +1105,9 @@ class ExcelCreator:
 
 if __name__ == "__main__":
     ExcelCreator(
-        year=2024,
+        year=2025,
         start_week=2,
-        end_week=50,
+        end_week=52,
         program_runs=10,
         areas_setting={
             "FFK": {"prio": 199, "min": 0, "max": 1},

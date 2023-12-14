@@ -118,6 +118,8 @@ Sub CopySheetsToDirectory(destinationPath As String)
     If Len(Dir(filePath)) > 0 Then
         ' If the file exists, open it and update the sheets
         Set newWb = Workbooks.Open(filePath, WriteResPassword:="DasIstEinGeheim")
+        newWb.Close SaveChanges:=False
+        Set newWb = Workbooks.Open(filePath, WriteResPassword:="DasIstEinGeheim")
 
         ' Delete sheet in newWb that is within the specified range
         For Each newSheet In newWb.Sheets
@@ -151,7 +153,6 @@ Sub CopySheetsToDirectory(destinationPath As String)
                 newWb.Sheets(i).Delete
             End If
         Next i
-        ' Save the consolidated workbook with a password
 
         activeSheetName = ThisWorkbook.ActiveSheet.Name
 
@@ -178,12 +179,10 @@ End Sub
 
 Function SheetIsInRange(sheetName As String) As Boolean
     Dim i As Integer
-    For i = 1 To 52
-        If sheetName = "KW" & i Then
-            SheetIsInRange = True
-            Exit Function
-        End If
-    Next i
+    If Left(sheetName, 2) = "KW" Then
+        SheetIsInRange = True
+        Exit Function
+    End If
     SheetIsInRange = False
 End Function
 

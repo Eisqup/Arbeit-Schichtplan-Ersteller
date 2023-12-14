@@ -119,8 +119,14 @@ class ExcelCreator:
     def create_week_sheet_overlay(self):
         def add_header(sheet):
             sheet.set_row(1, 40)
-            sheet.write(1, 1, self.year, self.create_format({"font_size": 18, "bold": True}))
-            sheet.write(1, 2, sheet.name, self.create_format({"font_size": 18, "bold": True}))
+            name = sheet.name
+            year = self.year
+            if " " in name:
+                name = name.split(" ")[0]
+                year = name.split("_")[1]
+                name = name.split("_")[0]
+            sheet.write(1, 1, year, self.create_format({"font_size": 18, "bold": True}))
+            sheet.write(1, 2, name, self.create_format({"font_size": 18, "bold": True}))
 
         def add_emp_count(sheet, start_row, end_row, start_col):
             border_format_big = {
@@ -232,7 +238,7 @@ class ExcelCreator:
                     sheet.set_column(col + day, col + day, self.day_col_width)
                     date_of_the_week = start_date_of_the_week + datetime.timedelta(days=day)
                     sheet.write(row, col + day, date_of_the_week.strftime("%A")[:2], self.create_format(border_format_big_lock))
-                    date_string = date_of_the_week.strftime("%d.%m")
+                    date_string = date_of_the_week.strftime("%d.%m.%Y")
 
                     # Check if the date is in the school holiday list
                     if date_string in self.public_holidays or date_of_the_week.weekday() in [5, 6]:
@@ -242,6 +248,8 @@ class ExcelCreator:
                         bg_color = self.school_holiday_color
                     else:
                         bg_color = self.date_color
+
+                    date_string = date_of_the_week.strftime("%d.%m")
 
                     sheet.write(row + 1, col + day, date_string, self.create_format(border_format_big_lock, {"bg_color": bg_color}))
                 col += self.week_length + 1
@@ -430,29 +438,29 @@ class ExcelCreator:
             last_day = datetime.datetime(year, 12, 31)
 
             # Check if the last day is in KW1 of the next year
-            is_kw1 = last_day.isocalendar()[1] == 1
+            is_kw1 = last_day.isocalendar()[1] != 52
 
-            # Check if the first day is not Sunday (ISO weekday 7) or Saturday (ISO weekday 6)
-            is_not_sunday_saturday = last_day.weekday() not in {6, 7}
+            # Check if the first day is not Sunday (ISO weekllday 7) or Saturday (ISO weekday 6)
+            is_not_sunday_saturday = last_day.isocalendar()[2] not in {6, 7}
 
             return is_kw1 and is_not_sunday_saturday
 
         def check_specific_days_of_this_year(year):
-            # Get the dates for the days in week 1 of the next year
-            first_day = datetime.datetime.strptime(f"{year- 1}-52-1", "%G-%V-%u")
-            first_day = datetime.date(first_day.year, first_day.month, first_day.day)
+            # Get the last day of the year
+            first_day = datetime.datetime(year, 1, 1)
 
-            for i in range(self.week_length):
-                if first_day.year == year:
-                    return True
-                first_day += datetime.timedelta(days=1)
+            # Check if the last day is is not in KW1 of this  year
+            is_not_kw1 = first_day.isocalendar()[1] != 1
 
-            return False
+            # Check if the first day is not Sunday (ISO weekday 7) or Saturday (ISO weekday 6)
+            is_not_sunday_saturday = first_day.isocalendar()[2] not in {6, 7}
+
+            return is_not_kw1 and is_not_sunday_saturday
 
         # Check if days are in the next year
         if check_specific_days_of_this_year(self.year):
             # If true, add a sheet for the last week of the last year
-            next_year_sheet = self.workbook.add_worksheet(f"KW52_{self.year -1}")
+            next_year_sheet = self.workbook.add_worksheet(f"KW52_{self.year -1} (Nicht in Statistik)")
             self.week_sheets[0] = next_year_sheet
             self.all_sheets.append(next_year_sheet)
 
@@ -464,7 +472,7 @@ class ExcelCreator:
         # Check if days are in the next year
         if check_specific_days_of_next_year(self.year):
             # If true, add a sheet for the first week of the next year
-            next_year_sheet = self.workbook.add_worksheet(f"KW1_{self.year + 1}")
+            next_year_sheet = self.workbook.add_worksheet(f"KW1_{self.year + 1} (Nicht in Statistik)")
             self.week_sheets[53] = next_year_sheet
             self.all_sheets.append(next_year_sheet)
 
@@ -531,7 +539,7 @@ class ExcelCreator:
                     row = self.start_row + 2
 
                     date_of_the_week = monday_of_week + datetime.timedelta(days=day)
-                    if date_of_the_week.strftime("%d.%m") in self.public_holidays or date_of_the_week.weekday() in [5, 6]:
+                    if date_of_the_week.strftime("%d.%m.%Y") in self.public_holidays or date_of_the_week.weekday() in [5, 6]:
                         for row in range(row, row + self.tabel_row_length - 1):
                             if row not in result_row_postion_list:
                                 sheet.write(row, col, "X", self.cell_formatting[f"{week}-{row}-{col}"])
@@ -1105,7 +1113,7 @@ class ExcelCreator:
 
 if __name__ == "__main__":
     ExcelCreator(
-        year=2025,
+        year=2024,
         start_week=2,
         end_week=52,
         program_runs=10,

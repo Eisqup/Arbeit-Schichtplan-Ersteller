@@ -437,19 +437,19 @@ class ExcelCreator:
             # Get the last day of the year
             last_day = datetime.datetime(year, 12, 31)
 
-            # Check if the last day is in KW1 of the next year
-            is_kw1 = last_day.isocalendar()[1] != 52
+            # Check if the last day is not in KW52 of the year
+            is_not_kw52 = last_day.isocalendar()[1] != 52
 
-            # Check if the first day is not Sunday (ISO weekllday 7) or Saturday (ISO weekday 6)
+            # Check if the last day is not Sunday (ISO weekllday 7) or Saturday (ISO weekday 6)
             is_not_sunday_saturday = last_day.isocalendar()[2] not in {6, 7}
 
-            return is_kw1 and is_not_sunday_saturday
+            return is_not_kw52 and is_not_sunday_saturday
 
         def check_if_days_are_in_week_52_of_the_last_year(year):
             # Get the last day of the year
             first_day = datetime.datetime(year, 1, 1)
 
-            # Check if the last day is is not in KW1 of this  year
+            # Check if the first day is is not in KW1 of this  year
             is_not_kw1 = first_day.isocalendar()[1] != 1
 
             # Check if the first day is not Sunday (ISO weekday 7) or Saturday (ISO weekday 6)

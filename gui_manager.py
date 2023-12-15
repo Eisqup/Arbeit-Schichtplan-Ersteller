@@ -1,5 +1,5 @@
 # Employee Creator GUI Application
-# Version: 1.1
+# Version: 1.11
 # Created by: Steven Stegink
 
 import tkinter as tk
@@ -64,7 +64,7 @@ class GUIManager:
 
         about_window = tk.Toplevel()
         about_window.title("About Employee Creator")
-        about_label = tk.Label(about_window, text="Employee Calender Creator Application\nVersion: 1.1\nCreated by: Steven Stegink")
+        about_label = tk.Label(about_window, text="Employee Calender Creator Application\nVersion: 1.11\nCreated by: Steven Stegink")
         about_label.pack(padx=20, pady=20)
 
         # Create a link label

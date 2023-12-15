@@ -433,7 +433,7 @@ class ExcelCreator:
             add_legend(week_sheet, start_row=row, start_col=col)
 
     def create_sheets_for_weeks(self):
-        def check_specific_days_of_next_year(year):
+        def check_if_days_are_in_week_1_of_the_next_year(year):
             # Get the last day of the year
             last_day = datetime.datetime(year, 12, 31)
 
@@ -445,7 +445,7 @@ class ExcelCreator:
 
             return is_kw1 and is_not_sunday_saturday
 
-        def check_specific_days_of_this_year(year):
+        def check_if_days_are_in_week_52_of_the_last_year(year):
             # Get the last day of the year
             first_day = datetime.datetime(year, 1, 1)
 
@@ -457,8 +457,8 @@ class ExcelCreator:
 
             return is_not_kw1 and is_not_sunday_saturday
 
-        # Check if days are in the next year
-        if check_specific_days_of_this_year(self.year):
+        # Check if days of the year in the last week from the last year
+        if check_if_days_are_in_week_52_of_the_last_year(self.year):
             # If true, add a sheet for the last week of the last year
             next_year_sheet = self.workbook.add_worksheet(f"KW52_{self.year -1} (Nicht in Statistik)")
             self.week_sheets[0] = next_year_sheet
@@ -469,8 +469,8 @@ class ExcelCreator:
             self.week_sheets[week] = week_sheet
             self.all_sheets.append(week_sheet)
 
-        # Check if days are in the next year
-        if check_specific_days_of_next_year(self.year):
+        # Check if days of this year are in week from the next year
+        if check_if_days_are_in_week_1_of_the_next_year(self.year):
             # If true, add a sheet for the first week of the next year
             next_year_sheet = self.workbook.add_worksheet(f"KW1_{self.year + 1} (Nicht in Statistik)")
             self.week_sheets[53] = next_year_sheet
